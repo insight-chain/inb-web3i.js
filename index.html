@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="./dist/web3.js"></script>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+    if (typeof iweb3 !== "undefined") {
+        iweb3 = new IWeb3(iweb3.currentProvider);
+    } else {
+        iweb3 = new IWeb3(new IWeb3.providers.HttpProvider("http://192.168.1.184:6001"));
+    }
+    console.log(iweb3)
+    var version = iweb3.version.api;
+    console.log(version);
+
+    iweb3.inb.getAccounts(function(error, data) {
+        console.log(data)
+    })
+
+
+    // //解锁账户
+    // var lockAccount = "0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2"
+    // iweb3.personal.unlockAccount(lockAccount, '1', (err, data) => {
+    //         if (err) {
+    //             console.log(err)
+    //         } else {
+    //             // console.log(data)
+    //         }
+    //     })
+    //     /* 抵押方法 */
+    // iweb3.inb.sendTransaction({
+    //         from: "0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2",
+    //         value: '2000000000000000000',
+    //         txType: 2
+    //     }, (err, data) => {
+    //         if (err) {
+    //             console.log(err)
+    //         } else {
+    //             console.log(data)
+    //         }
+    //     })
+    //     //查看抵押是否成功
+    // iweb3.inb.getTransaction('0x58f2319e467a66d14ccb74d402813ade8c2ea4f51e9bf07ce04ebb3e1b08384c', (err, data) => {
+    //         if (err) {
+    //             console.log(err)
+    //         } else {
+    //             //console.log(data)
+    //         }
+    //     })
+    //     /* 赎回 */
+    // iweb3.inb.sendTransaction({
+    //     from: '0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2',
+    //     value: '30000000000000000',
+    //     txType: 4
+    // }, (err, data) => {
+    //     console.log(data)
+    //         //0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137
+    // })
+    // iweb3.inb.getTransaction('0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137', (err, data) => {
+    //         if (err) {
+    //             console.log(err)
+    //         } else {
+    //             // console.log(data)
+    //         }
+    //     })
+    //     /*
+    //      **测试链上 web3.js 新加的方法
+    //      */
+
+    // // web3.inb.getBalance('0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2', (err, data) => {
+    // //     console.log(data)
+    // // })
+    // iweb3.inb.getRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
+    //     if (err) {
+    //         console.log(err)
+    //     } else {
+    //         console.log(data)
+    //             //BigNumber {s: 1, e: 0, c: Array(1)}
+    //     }
+    // })
+
+    // iweb3.inb.getUsedRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
+    //     if (err) {
+    //         console.log(err)
+    //     } else {
+    //         console.log(data)
+    //     }
+    // })
+    // iweb3.inb.getMortgage("0x95f6d9df417ae26644c35d1527f3953e292af3b8bc", (err, data) => {
+    //         console.log(data)
+    //     })
+    //     /* 
+
+    //链上 .go 文件中的方法(要在 eth.js 中定义)
+    //     */
+    // iweb3.inb.minerReward((err, data) => {
+    //     console.log(data)
+    // })
+    //iweb3.inb.sendRawTransaction()
+</script>
