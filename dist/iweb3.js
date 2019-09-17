@@ -16353,4 +16353,4 @@ if (typeof window !== 'undefined' && typeof window.IWeb3 === 'undefined') {
 
 module.exports = IWeb3;
 },{"./lib/web3":22}]},{},["web3"])
-//# sourceMappingURL=web3.js.map
+//# sourceMappingURL=iweb3.js.map

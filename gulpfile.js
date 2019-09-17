@@ -19,8 +19,8 @@ var replace = require('gulp-replace');
 
 var DEST = path.join(__dirname, 'dist/');
 var src = 'index';
-var dst = 'web3';
-var lightDst = 'web3-light';
+var dst = 'iweb3';
+var lightDst = 'iweb3-light';
 
 var browserifyOptions = {
     debug: true,
@@ -29,63 +29,63 @@ var browserifyOptions = {
     bundleExternal: true
 };
 
-gulp.task('version', function(){
-  gulp.src(['./package.json'])
-    .pipe(replace(/\"version\"\: \"([\.0-9]*)\"/, '"version": "'+ version.version + '"'))
-    .pipe(gulp.dest('./'));
-  gulp.src(['./bower.json'])
-    .pipe(replace(/\"version\"\: \"([\.0-9]*)\"/, '"version": "'+ version.version + '"'))
-    .pipe(gulp.dest('./'));
-  gulp.src(['./package.js'])
-    .pipe(replace(/version\: \'([\.0-9]*)\'/, "version: '"+ version.version + "'"))
-    .pipe(gulp.dest('./'));
+gulp.task('version', function() {
+    gulp.src(['./package.json'])
+        .pipe(replace(/\"version\"\: \"([\.0-9]*)\"/, '"version": "' + version.version + '"'))
+        .pipe(gulp.dest('./'));
+    gulp.src(['./bower.json'])
+        .pipe(replace(/\"version\"\: \"([\.0-9]*)\"/, '"version": "' + version.version + '"'))
+        .pipe(gulp.dest('./'));
+    gulp.src(['./package.js'])
+        .pipe(replace(/version\: \'([\.0-9]*)\'/, "version: '" + version.version + "'"))
+        .pipe(gulp.dest('./'));
 });
 
-gulp.task('bower', ['version'], function(cb){
-    bower.commands.install().on('end', function (installed){
+gulp.task('bower', ['version'], function(cb) {
+    bower.commands.install().on('end', function(installed) {
         console.log(installed);
         cb();
     });
 });
 
-gulp.task('lint', [], function(){
+gulp.task('lint', [], function() {
     return gulp.src(['./*.js', './lib/*.js'])
         .pipe(jshint())
         .pipe(jshint.reporter('default'));
 });
 
 gulp.task('clean', ['lint'], function(cb) {
-    del([ DEST ]).then(cb.bind(null, null));
+    del([DEST]).then(cb.bind(null, null));
 });
 
-gulp.task('light', ['clean'], function () {
+gulp.task('light', ['clean'], function() {
     return browserify(browserifyOptions)
-        .require('./' + src + '.js', {expose: 'web3'})
+        .require('./' + src + '.js', { expose: 'web3' })
         .ignore('bignumber.js')
-        .require('./lib/utils/browser-bn.js', {expose: 'bignumber.js'}) // fake bignumber.js
+        .require('./lib/utils/browser-bn.js', { expose: 'bignumber.js' }) // fake bignumber.js
         .add('./' + src + '.js')
         .bundle()
-        .pipe(exorcist(path.join( DEST, lightDst + '.js.map')))
+        .pipe(exorcist(path.join(DEST, lightDst + '.js.map')))
         .pipe(source(lightDst + '.js'))
-        .pipe(gulp.dest( DEST ))
+        .pipe(gulp.dest(DEST))
         .pipe(streamify(uglify()))
         .pipe(rename(lightDst + '.min.js'))
-        .pipe(gulp.dest( DEST ));
+        .pipe(gulp.dest(DEST));
 });
 
-gulp.task('standalone', ['clean'], function () {
+gulp.task('standalone', ['clean'], function() {
     return browserify(browserifyOptions)
-        .require('./' + src + '.js', {expose: 'web3'})
+        .require('./' + src + '.js', { expose: 'web3' })
         .require('bignumber.js') // expose it to dapp users
         .add('./' + src + '.js')
         .ignore('crypto')
         .bundle()
-        .pipe(exorcist(path.join( DEST, dst + '.js.map')))
+        .pipe(exorcist(path.join(DEST, dst + '.js.map')))
         .pipe(source(dst + '.js'))
-        .pipe(gulp.dest( DEST ))
+        .pipe(gulp.dest(DEST))
         .pipe(streamify(uglify()))
         .pipe(rename(dst + '.min.js'))
-        .pipe(gulp.dest( DEST ));
+        .pipe(gulp.dest(DEST));
 });
 
 gulp.task('watch', function() {
@@ -93,4 +93,3 @@ gulp.task('watch', function() {
 });
 
 gulp.task('default', ['version', 'lint', 'clean', 'light', 'standalone']);
-
