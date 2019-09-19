@@ -1,8 +1,8 @@
-var IWeb3 = require('./lib/web3');
+var Web3I = require('./lib/web3');
 
 // dont override global variable
-if (typeof window !== 'undefined' && typeof window.IWeb3 === 'undefined') {
-    window.IWeb3 = IWeb3;
+if (typeof window !== 'undefined' && typeof window.Web3I === 'undefined') {
+    window.Web3I = Web3I;
 }
 
-module.exports = IWeb3;
+module.exports = Web3I;

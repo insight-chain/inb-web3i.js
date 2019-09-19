@@ -19,8 +19,8 @@ var replace = require('gulp-replace');
 
 var DEST = path.join(__dirname, 'dist/');
 var src = 'index';
-var dst = 'iweb3';
-var lightDst = 'iweb3-light';
+var dst = 'web3i';
+var lightDst = 'web3i-light';
 
 var browserifyOptions = {
     debug: true,
