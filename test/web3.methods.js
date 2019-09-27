@@ -1,25 +1,24 @@
-var Web3 = require('../index.js');
-var web3 = new Web3();
+var Web3i = require('../index.js');
+var web3i = new Web3i();
 var u = require('./helpers/test.utils.js');
 
-describe('web3', function() {
-    describe('methods', function () {
-        u.methodExists(web3, 'sha3');
-        u.methodExists(web3, 'toAscii');
-        u.methodExists(web3, 'fromAscii');
-        u.methodExists(web3, 'toDecimal');
-        u.methodExists(web3, 'fromDecimal');
-        u.methodExists(web3, 'fromWei');
-        u.methodExists(web3, 'toWei');
-        u.methodExists(web3, 'toBigNumber');
-        u.methodExists(web3, 'isAddress');
-        u.methodExists(web3, 'setProvider');
-        u.methodExists(web3, 'reset');
+describe('web3i', function() {
+    describe('methods', function() {
+        u.methodExists(web3i, 'sha3');
+        u.methodExists(web3i, 'toAscii');
+        u.methodExists(web3i, 'fromAscii');
+        u.methodExists(web3i, 'toDecimal');
+        u.methodExists(web3i, 'fromDecimal');
+        u.methodExists(web3i, 'fromWei');
+        u.methodExists(web3i, 'toWei');
+        u.methodExists(web3i, 'toBigNumber');
+        u.methodExists(web3i, 'isAddress');
+        u.methodExists(web3i, 'setProvider');
+        u.methodExists(web3i, 'reset');
 
-        u.propertyExists(web3, 'providers');
-        u.propertyExists(web3, 'eth');
-        u.propertyExists(web3, 'db');
-        u.propertyExists(web3, 'shh');
+        u.propertyExists(web3i, 'providers');
+        u.propertyExists(web3i, 'eth');
+        u.propertyExists(web3i, 'db');
+        u.propertyExists(web3i, 'shh');
     });
 });
-

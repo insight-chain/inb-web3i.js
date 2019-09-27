@@ -1,7 +1,7 @@
 var chai = require('chai');
 var assert = chai.assert;
-var Web3 = require('../index');
-var web3 = new Web3();
+var web3i = require('../index');
+var web3i = new web3i();
 var FakeHttpProvider = require('./helpers/FakeHttpProvider');
 
 // use sendTransaction as dummy
@@ -18,52 +18,52 @@ var tests = [{
     },
     result: '0xb',
     formattedResult: '0xb',
-    call: 'eth_'+ method
+    call: 'eth_' + method
 }];
 
-describe('async', function () {
-    tests.forEach(function (test, index) {
-        it('test: ' + index, function (done) {
-            
+describe('async', function() {
+    tests.forEach(function(test, index) {
+        it('test: ' + index, function(done) {
+
             // given
             var provider = new FakeHttpProvider();
-            web3.setProvider(provider);
+            web3i.setProvider(provider);
             provider.injectResult(test.result);
-            provider.injectValidation(function (payload) {
+            provider.injectValidation(function(payload) {
                 assert.equal(payload.jsonrpc, '2.0');
                 assert.equal(payload.method, test.call);
                 assert.deepEqual(payload.params, [test.formattedInput]);
             });
 
             // when 
-            web3.eth[method](test.input, function(error, result){
+            web3i.eth[method](test.input, function(error, result) {
 
                 // then
                 assert.isNull(error);
                 assert.strictEqual(test.formattedResult, result);
-                
+
                 done();
             });
-            
+
         });
 
-        it('error test: ' + index, function (done) {
-            
+        it('error test: ' + index, function(done) {
+
             // given
             var provider = new FakeHttpProvider();
-            web3.setProvider(provider);
+            web3i.setProvider(provider);
             provider.injectError({
-                    message: test.result,
-                    code: -32603
+                message: test.result,
+                code: -32603
             });
-            provider.injectValidation(function (payload) {
+            provider.injectValidation(function(payload) {
                 assert.equal(payload.jsonrpc, '2.0');
                 assert.equal(payload.method, test.call);
                 assert.deepEqual(payload.params, [test.formattedInput]);
             });
 
             // when 
-            web3.eth[method](test.input, function(error, result){
+            web3i.eth[method](test.input, function(error, result) {
 
                 // then
                 assert.isUndefined(result);
@@ -71,8 +71,7 @@ describe('async', function () {
 
                 done();
             });
-            
+
         });
     });
 });
-

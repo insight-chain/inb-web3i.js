@@ -635,15 +635,15 @@ var SolidityTypeReal = require('./real');
 var SolidityTypeUReal = require('./ureal');
 var SolidityTypeBytes = require('./bytes');
 
-var isDynamic = function (solidityType, type) {
-   return solidityType.isDynamicType(type) ||
-          solidityType.isDynamicArray(type);
+var isDynamic = function(solidityType, type) {
+    return solidityType.isDynamicType(type) ||
+        solidityType.isDynamicArray(type);
 };
 
 /**
  * SolidityCoder prototype should be used to encode/decode solidity params of any type
  */
-var SolidityCoder = function (types) {
+var SolidityCoder = function(types) {
     this._types = types;
 };
 
@@ -655,8 +655,8 @@ var SolidityCoder = function (types) {
  * @returns {SolidityType}
  * @throws {Error} throws if no matching type is found
  */
-SolidityCoder.prototype._requireType = function (type) {
-    var solidityType = this._types.filter(function (t) {
+SolidityCoder.prototype._requireType = function(type) {
+    var solidityType = this._types.filter(function(t) {
         return t.isType(type);
     })[0];
 
@@ -675,7 +675,7 @@ SolidityCoder.prototype._requireType = function (type) {
  * @param {Object} plain param
  * @return {String} encoded plain param
  */
-SolidityCoder.prototype.encodeParam = function (type, param) {
+SolidityCoder.prototype.encodeParam = function(type, param) {
     return this.encodeParams([type], [param]);
 };
 
@@ -687,14 +687,14 @@ SolidityCoder.prototype.encodeParam = function (type, param) {
  * @param {Array} params
  * @return {String} encoded list of params
  */
-SolidityCoder.prototype.encodeParams = function (types, params) {
+SolidityCoder.prototype.encodeParams = function(types, params) {
     var solidityTypes = this.getSolidityTypes(types);
 
-    var encodeds = solidityTypes.map(function (solidityType, index) {
+    var encodeds = solidityTypes.map(function(solidityType, index) {
         return solidityType.encode(params[index], types[index]);
     });
 
-    var dynamicOffset = solidityTypes.reduce(function (acc, solidityType, index) {
+    var dynamicOffset = solidityTypes.reduce(function(acc, solidityType, index) {
         var staticPartLength = solidityType.staticPartLength(types[index]);
         var roundedStaticPartLength = Math.floor((staticPartLength + 31) / 32) * 32;
 
@@ -708,11 +708,11 @@ SolidityCoder.prototype.encodeParams = function (types, params) {
     return result;
 };
 
-SolidityCoder.prototype.encodeMultiWithOffset = function (types, solidityTypes, encodeds, dynamicOffset) {
+SolidityCoder.prototype.encodeMultiWithOffset = function(types, solidityTypes, encodeds, dynamicOffset) {
     var result = "";
     var self = this;
 
-    types.forEach(function (type, i) {
+    types.forEach(function(type, i) {
         if (isDynamic(solidityTypes[i], types[i])) {
             result += f.formatInputInt(dynamicOffset).encode();
             var e = self.encodeWithOffset(types[i], solidityTypes[i], encodeds[i], dynamicOffset);
@@ -725,7 +725,7 @@ SolidityCoder.prototype.encodeMultiWithOffset = function (types, solidityTypes, 
         // TODO: figure out nested arrays
     });
 
-    types.forEach(function (type, i) {
+    types.forEach(function(type, i) {
         if (isDynamic(solidityTypes[i], types[i])) {
             var e = self.encodeWithOffset(types[i], solidityTypes[i], encodeds[i], dynamicOffset);
             dynamicOffset += e.length / 2;
@@ -735,16 +735,16 @@ SolidityCoder.prototype.encodeMultiWithOffset = function (types, solidityTypes, 
     return result;
 };
 
-SolidityCoder.prototype.encodeWithOffset = function (type, solidityType, encoded, offset) {
+SolidityCoder.prototype.encodeWithOffset = function(type, solidityType, encoded, offset) {
     /* jshint maxcomplexity: 17 */
     /* jshint maxdepth: 5 */
 
     var self = this;
-    var encodingMode={dynamic:1,static:2,other:3};
+    var encodingMode = { dynamic: 1, static: 2, other: 3 };
 
-    var mode=(solidityType.isDynamicArray(type)?encodingMode.dynamic:(solidityType.isStaticArray(type)?encodingMode.static:encodingMode.other));
+    var mode = (solidityType.isDynamicArray(type) ? encodingMode.dynamic : (solidityType.isStaticArray(type) ? encodingMode.static : encodingMode.other));
 
-    if(mode !== encodingMode.other){
+    if (mode !== encodingMode.other) {
         var nestedName = solidityType.nestedName(type);
         var nestedStaticPartLength = solidityType.staticPartLength(nestedName);
         var result = (mode === encodingMode.dynamic ? encoded[0] : '');
@@ -754,23 +754,21 @@ SolidityCoder.prototype.encodeWithOffset = function (type, solidityType, encoded
 
             for (var i = 0; i < encoded.length; i++) {
                 // calculate length of previous item
-                if(mode === encodingMode.dynamic){
+                if (mode === encodingMode.dynamic) {
                     previousLength += +(encoded[i - 1])[0] || 0;
-                }
-                else if(mode === encodingMode.static){
+                } else if (mode === encodingMode.static) {
                     previousLength += +(encoded[i - 1] || [])[0] || 0;
                 }
                 result += f.formatInputInt(offset + i * nestedStaticPartLength + previousLength * 32).encode();
             }
         }
 
-        var len= (mode === encodingMode.dynamic ? encoded.length-1 : encoded.length);
+        var len = (mode === encodingMode.dynamic ? encoded.length - 1 : encoded.length);
         for (var c = 0; c < len; c++) {
             var additionalOffset = result / 2;
-            if(mode === encodingMode.dynamic){
-                result += self.encodeWithOffset(nestedName, solidityType, encoded[c + 1], offset +  additionalOffset);
-            }
-            else if(mode === encodingMode.static){
+            if (mode === encodingMode.dynamic) {
+                result += self.encodeWithOffset(nestedName, solidityType, encoded[c + 1], offset + additionalOffset);
+            } else if (mode === encodingMode.static) {
                 result += self.encodeWithOffset(nestedName, solidityType, encoded[c], offset + additionalOffset);
             }
         }
@@ -790,7 +788,7 @@ SolidityCoder.prototype.encodeWithOffset = function (type, solidityType, encoded
  * @param {String} bytes
  * @return {Object} plain param
  */
-SolidityCoder.prototype.decodeParam = function (type, bytes) {
+SolidityCoder.prototype.decodeParam = function(type, bytes) {
     return this.decodeParams([type], bytes)[0];
 };
 
@@ -802,35 +800,35 @@ SolidityCoder.prototype.decodeParam = function (type, bytes) {
  * @param {String} bytes
  * @return {Array} array of plain params
  */
-SolidityCoder.prototype.decodeParams = function (types, bytes) {
+SolidityCoder.prototype.decodeParams = function(types, bytes) {
     var solidityTypes = this.getSolidityTypes(types);
     var offsets = this.getOffsets(types, solidityTypes);
 
-    return solidityTypes.map(function (solidityType, index) {
-        return solidityType.decode(bytes, offsets[index],  types[index], index);
+    return solidityTypes.map(function(solidityType, index) {
+        return solidityType.decode(bytes, offsets[index], types[index], index);
     });
 };
 
-SolidityCoder.prototype.getOffsets = function (types, solidityTypes) {
-    var lengths =  solidityTypes.map(function (solidityType, index) {
+SolidityCoder.prototype.getOffsets = function(types, solidityTypes) {
+    var lengths = solidityTypes.map(function(solidityType, index) {
         return solidityType.staticPartLength(types[index]);
     });
 
     for (var i = 1; i < lengths.length; i++) {
-         // sum with length of previous element
+        // sum with length of previous element
         lengths[i] += lengths[i - 1];
     }
 
-    return lengths.map(function (length, index) {
+    return lengths.map(function(length, index) {
         // remove the current length, so the length is sum of previous elements
         var staticPartLength = solidityTypes[index].staticPartLength(types[index]);
         return length - staticPartLength;
     });
 };
 
-SolidityCoder.prototype.getSolidityTypes = function (types) {
+SolidityCoder.prototype.getSolidityTypes = function(types) {
     var self = this;
-    return types.map(function (type) {
+    return types.map(function(type) {
         return self._requireType(type);
     });
 };
@@ -848,7 +846,6 @@ var coder = new SolidityCoder([
 ]);
 
 module.exports = coder;
-
 },{"./address":4,"./bool":5,"./bytes":6,"./dynamicbytes":8,"./formatters":9,"./int":10,"./real":12,"./string":13,"./uint":15,"./ureal":16}],8:[function(require,module,exports){
 var f = require('./formatters');
 var SolidityType = require('./type');
@@ -1707,20 +1704,20 @@ if (typeof XMLHttpRequest === 'undefined') {
 
 },{}],18:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file config.js
  * @authors:
@@ -1780,28 +1777,26 @@ module.exports = {
     ETH_SIGNATURE_LENGTH: 4,
     ETH_UNITS: ETH_UNITS,
     ETH_BIGNUMBER_ROUNDING_MODE: { ROUNDING_MODE: BigNumber.ROUND_DOWN },
-    ETH_POLLING_TIMEOUT: 1000/2,
+    ETH_POLLING_TIMEOUT: 1000 / 2,
     defaultBlock: 'latest',
     defaultAccount: undefined
 };
-
-
 },{"bignumber.js":"bignumber.js"}],19:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file sha3.js
@@ -1812,7 +1807,7 @@ module.exports = {
 var CryptoJS = require('crypto-js');
 var sha3 = require('crypto-js/sha3');
 
-module.exports = function (value, options) {
+module.exports = function(value, options) {
     if (options && options.encoding === 'hex') {
         if (value.length > 2 && value.substr(0, 2) === '0x') {
             value = value.substr(2);
@@ -1824,24 +1819,22 @@ module.exports = function (value, options) {
         outputLength: 256
     }).toString();
 };
-
-
 },{"crypto-js":59,"crypto-js/sha3":80}],20:[function(require,module,exports){
 /*
-    This file is part of iweb3.js.
+    This file is part of web3i.js.
 
-    iweb3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    iweb3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with iweb3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file utils.js
@@ -1874,6 +1867,7 @@ var unitMap = {
     'Kwei': '1000',
     'babbage': '1000',
     'femtoether': '1000',
+    'inb': '100000',
     'mwei': '1000000',
     'Mwei': '1000000',
     'lovelace': '1000000',
@@ -2233,7 +2227,7 @@ var toTwosComplement = function(number) {
  * @return {Boolean}
  */
 var isStrictAddress = function(address) {
-    return /^0x[0-9a-f]{42}$/i.test(address);
+    return /^0x[0-9a-f]{40}$/i.test(address);
 };
 
 /**
@@ -2244,10 +2238,10 @@ var isStrictAddress = function(address) {
  * @return {Boolean}
  */
 var isAddress = function(address) {
-    if (!/^(0x)?[0-9a-f]{42}$/i.test(address)) {
+    if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
         // check if it has the basic requirements of an address
         return false;
-    } else if (/^(0x)?[0-9a-f]{42}$/.test(address) || /^(0x)?[0-9A-F]{42}$/.test(address)) {
+    } else if (/^(0x)?[0-9a-f]{40}$/.test(address) || /^(0x)?[0-9A-F]{40}$/.test(address)) {
         // If it's all small caps or all all caps, return true
         return true;
     } else {
@@ -2268,7 +2262,7 @@ var isChecksumAddress = function(address) {
     address = address.replace('0x', '');
     var addressHash = sha3(address.toLowerCase());
 
-    for (var i = 0; i < 42; i++) {
+    for (var i = 0; i < 40; i++) {
         // the nth letter should be uppercase if the nth digit of casemap is 1
         if ((parseInt(addressHash[i], 16) > 7 && address[i].toUpperCase() !== address[i]) || (parseInt(addressHash[i], 16) <= 7 && address[i].toLowerCase() !== address[i])) {
             return false;
@@ -2316,11 +2310,11 @@ var toAddress = function(address) {
         return address;
     }
 
-    if (/^[0-9a-f]{42}$/.test(address)) {
+    if (/^[0-9a-f]{40}$/.test(address)) {
         return '0x' + address;
     }
 
-    return '0x' + padLeft(toHex(address).substr(2), 42);
+    return '0x' + padLeft(toHex(address).substr(2), 40);
 };
 
 /**
@@ -2472,28 +2466,27 @@ module.exports = {
 };
 },{"./sha3.js":19,"bignumber.js":"bignumber.js","utf8":85}],21:[function(require,module,exports){
 module.exports={
-    "version": "0.20.6"
+    "version": "1.0"
 }
-
 },{}],22:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @file web3.js
+ * @file web3i.js
  * @authors:
  *   Jeffrey Wilcke <jeff@ethdev.com>
  *   Marek Kotewicz <marek@ethdev.com>
@@ -2503,23 +2496,23 @@ module.exports={
  * @date 2014
  */
 
-var RequestManager = require('./web3/requestmanager');
-var Iban = require('./web3/iban');
-var Inb = require('./web3/methods/eth');
-var DB = require('./web3/methods/db');
-var Shh = require('./web3/methods/shh');
-var Net = require('./web3/methods/net');
-var Personal = require('./web3/methods/personal');
-var Swarm = require('./web3/methods/swarm');
-var Settings = require('./web3/settings');
+var RequestManager = require('./web3i/requestmanager');
+var Iban = require('./web3i/iban');
+var Inb = require('./web3i/methods/eth');
+var DB = require('./web3i/methods/db');
+var Shh = require('./web3i/methods/shh');
+var Net = require('./web3i/methods/net');
+var Personal = require('./web3i/methods/personal');
+var Swarm = require('./web3i/methods/swarm');
+var Settings = require('./web3i/settings');
 var version = require('./version.json');
 var utils = require('./utils/utils');
 var sha3 = require('./utils/sha3');
-var extend = require('./web3/extend');
-var Batch = require('./web3/batch');
-var Property = require('./web3/property');
-var HttpProvider = require('./web3/httpprovider');
-var IpcProvider = require('./web3/ipcprovider');
+var extend = require('./web3i/extend');
+var Batch = require('./web3i/batch');
+var Property = require('./web3i/property');
+var HttpProvider = require('./web3i/httpprovider');
+var IpcProvider = require('./web3i/ipcprovider');
 var BigNumber = require('bignumber.js');
 
 
@@ -2627,22 +2620,22 @@ Web3I.prototype.createBatch = function() {
 };
 
 module.exports = Web3I;
-},{"./utils/sha3":19,"./utils/utils":20,"./version.json":21,"./web3/batch":24,"./web3/extend":28,"./web3/httpprovider":32,"./web3/iban":33,"./web3/ipcprovider":34,"./web3/methods/db":37,"./web3/methods/eth":38,"./web3/methods/net":39,"./web3/methods/personal":40,"./web3/methods/shh":41,"./web3/methods/swarm":42,"./web3/property":45,"./web3/requestmanager":46,"./web3/settings":47,"bignumber.js":"bignumber.js"}],23:[function(require,module,exports){
+},{"./utils/sha3":19,"./utils/utils":20,"./version.json":21,"./web3i/batch":24,"./web3i/extend":28,"./web3i/httpprovider":32,"./web3i/iban":33,"./web3i/ipcprovider":34,"./web3i/methods/db":37,"./web3i/methods/eth":38,"./web3i/methods/net":39,"./web3i/methods/personal":40,"./web3i/methods/shh":41,"./web3i/methods/swarm":42,"./web3i/property":45,"./web3i/requestmanager":46,"./web3i/settings":47,"bignumber.js":"bignumber.js"}],23:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file allevents.js
@@ -2657,19 +2650,19 @@ var utils = require('../utils/utils');
 var Filter = require('./filter');
 var watches = require('./methods/watches');
 
-var AllSolidityEvents = function (requestManager, json, address) {
+var AllSolidityEvents = function(requestManager, json, address) {
     this._requestManager = requestManager;
     this._json = json;
     this._address = address;
 };
 
-AllSolidityEvents.prototype.encode = function (options) {
+AllSolidityEvents.prototype.encode = function(options) {
     options = options || {};
     var result = {};
 
-    ['fromBlock', 'toBlock'].filter(function (f) {
+    ['fromBlock', 'toBlock'].filter(function(f) {
         return options[f] !== undefined;
-    }).forEach(function (f) {
+    }).forEach(function(f) {
         result[f] = formatters.inputBlockNumberFormatter(options[f]);
     });
 
@@ -2678,12 +2671,12 @@ AllSolidityEvents.prototype.encode = function (options) {
     return result;
 };
 
-AllSolidityEvents.prototype.decode = function (data) {
+AllSolidityEvents.prototype.decode = function(data) {
     data.data = data.data || '';
 
 
     var eventTopic = (utils.isArray(data.topics) && utils.isString(data.topics[0])) ? data.topics[0].slice(2) : '';
-    var match = this._json.filter(function (j) {
+    var match = this._json.filter(function(j) {
         return eventTopic === sha3(utils.transformToFullName(j));
     })[0];
 
@@ -2695,11 +2688,11 @@ AllSolidityEvents.prototype.decode = function (data) {
     return event.decode(data);
 };
 
-AllSolidityEvents.prototype.execute = function (options, callback) {
+AllSolidityEvents.prototype.execute = function(options, callback) {
 
     if (utils.isFunction(arguments[arguments.length - 1])) {
         callback = arguments[arguments.length - 1];
-        if(arguments.length === 1)
+        if (arguments.length === 1)
             options = null;
     }
 
@@ -2708,30 +2701,28 @@ AllSolidityEvents.prototype.execute = function (options, callback) {
     return new Filter(o, 'eth', this._requestManager, watches.eth(), formatter, callback);
 };
 
-AllSolidityEvents.prototype.attachToContract = function (contract) {
+AllSolidityEvents.prototype.attachToContract = function(contract) {
     var execute = this.execute.bind(this);
     contract.allEvents = execute;
 };
 
 module.exports = AllSolidityEvents;
-
-
 },{"../utils/sha3":19,"../utils/utils":20,"./event":27,"./filter":29,"./formatters":30,"./methods/watches":43}],24:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file batch.js
@@ -2742,8 +2733,8 @@ module.exports = AllSolidityEvents;
 var Jsonrpc = require('./jsonrpc');
 var errors = require('./errors');
 
-var Batch = function (web3) {
-    this.requestManager = web3._requestManager;
+var Batch = function(web3i) {
+    this.requestManager = web3i._requestManager;
     this.requests = [];
 };
 
@@ -2753,7 +2744,7 @@ var Batch = function (web3) {
  * @method add
  * @param {Object} jsonrpc requet object
  */
-Batch.prototype.add = function (request) {
+Batch.prototype.add = function(request) {
     this.requests.push(request);
 };
 
@@ -2762,13 +2753,13 @@ Batch.prototype.add = function (request) {
  *
  * @method execute
  */
-Batch.prototype.execute = function () {
+Batch.prototype.execute = function() {
     var requests = this.requests;
-    this.requestManager.sendBatch(requests, function (err, results) {
+    this.requestManager.sendBatch(requests, function(err, results) {
         results = results || [];
-        requests.map(function (request, index) {
+        requests.map(function(request, index) {
             return results[index] || {};
-        }).forEach(function (result, index) {
+        }).forEach(function(result, index) {
             if (requests[index].callback) {
 
                 if (!Jsonrpc.isValidResponse(result)) {
@@ -2778,28 +2769,26 @@ Batch.prototype.execute = function () {
                 requests[index].callback(null, (requests[index].format ? requests[index].format(result.result) : result.result));
             }
         });
-    }); 
+    });
 };
 
 module.exports = Batch;
-
-
 },{"./errors":26,"./jsonrpc":35}],25:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file contract.js
@@ -2820,14 +2809,14 @@ var AllEvents = require('./allevents');
  * @param {Array} abi
  * @param {Array} constructor params
  */
-var encodeConstructorParams = function (abi, params) {
-    return abi.filter(function (json) {
+var encodeConstructorParams = function(abi, params) {
+    return abi.filter(function(json) {
         return json.type === 'constructor' && json.inputs.length === params.length;
-    }).map(function (json) {
-        return json.inputs.map(function (input) {
+    }).map(function(json) {
+        return json.inputs.map(function(input) {
             return input.type;
         });
-    }).map(function (types) {
+    }).map(function(types) {
         return coder.encodeParams(types, params);
     })[0] || '';
 };
@@ -2839,12 +2828,12 @@ var encodeConstructorParams = function (abi, params) {
  * @param {Contract} contract
  * @param {Array} abi
  */
-var addFunctionsToContract = function (contract) {
-    contract.abi.filter(function (json) {
+var addFunctionsToContract = function(contract) {
+    contract.abi.filter(function(json) {
         return json.type === 'function';
-    }).map(function (json) {
+    }).map(function(json) {
         return new SolidityFunction(contract._eth, json, contract.address);
-    }).forEach(function (f) {
+    }).forEach(function(f) {
         f.attachToContract(contract);
     });
 };
@@ -2856,17 +2845,17 @@ var addFunctionsToContract = function (contract) {
  * @param {Contract} contract
  * @param {Array} abi
  */
-var addEventsToContract = function (contract) {
-    var events = contract.abi.filter(function (json) {
+var addEventsToContract = function(contract) {
+    var events = contract.abi.filter(function(json) {
         return json.type === 'event';
     });
 
     var All = new AllEvents(contract._eth._requestManager, events, contract.address);
     All.attachToContract(contract);
 
-    events.map(function (json) {
+    events.map(function(json) {
         return new SolidityEvent(contract._eth._requestManager, json, contract.address);
-    }).forEach(function (e) {
+    }).forEach(function(e) {
         e.attachToContract(contract);
     });
 };
@@ -2880,12 +2869,12 @@ var addEventsToContract = function (contract) {
  * @param {Function} callback
  * @returns {Undefined}
  */
-var checkForContractAddress = function(contract, callback){
+var checkForContractAddress = function(contract, callback) {
     var count = 0,
         callbackFired = false;
 
     // wait for receipt
-    var filter = contract._eth.filter('latest', function(e){
+    var filter = contract._eth.filter('latest', function(e) {
         if (!e && !callbackFired) {
             count++;
 
@@ -2903,19 +2892,19 @@ var checkForContractAddress = function(contract, callback){
 
             } else {
 
-                contract._eth.getTransactionReceipt(contract.transactionHash, function(e, receipt){
-                    if(receipt && receipt.blockHash && !callbackFired) {
+                contract._eth.getTransactionReceipt(contract.transactionHash, function(e, receipt) {
+                    if (receipt && receipt.blockHash && !callbackFired) {
 
-                        contract._eth.getCode(receipt.contractAddress, function(e, code){
+                        contract._eth.getCode(receipt.contractAddress, function(e, code) {
                             /*jshint maxcomplexity: 6 */
 
-                            if(callbackFired || !code)
+                            if (callbackFired || !code)
                                 return;
 
                             filter.stopWatching(function() {});
                             callbackFired = true;
 
-                            if(code.length > 3) {
+                            if (code.length > 3) {
 
                                 // console.log('Contract code deployed!');
 
@@ -2926,11 +2915,11 @@ var checkForContractAddress = function(contract, callback){
                                 addEventsToContract(contract);
 
                                 // call callback for the second time
-                                if(callback)
+                                if (callback)
                                     callback(null, contract);
 
                             } else {
-                                if(callback)
+                                if (callback)
                                     callback(new Error('The contract code couldn\'t be stored, please check your gas amount.'));
                                 else
                                     throw new Error('The contract code couldn\'t be stored, please check your gas amount.');
@@ -2949,7 +2938,7 @@ var checkForContractAddress = function(contract, callback){
  * @method ContractFactory
  * @param {Array} abi
  */
-var ContractFactory = function (eth, abi) {
+var ContractFactory = function(eth, abi) {
     this.eth = eth;
     this.abi = abi;
 
@@ -2963,7 +2952,7 @@ var ContractFactory = function (eth, abi) {
      * @param {Function} callback
      * @returns {Contract} returns contract instance
      */
-    this.new = function () {
+    this.new = function() {
         /*jshint maxcomplexity: 7 */
 
         var contract = new Contract(this.eth, this.abi);
@@ -2983,7 +2972,7 @@ var ContractFactory = function (eth, abi) {
         }
 
         if (options.value > 0) {
-            var constructorAbi = abi.filter(function (json) {
+            var constructorAbi = abi.filter(function(json) {
                 return json.type === 'constructor' && json.inputs.length === args.length;
             })[0] || {};
 
@@ -2998,7 +2987,7 @@ var ContractFactory = function (eth, abi) {
         if (callback) {
 
             // wait for the contract address and check if the code was deployed
-            this.eth.sendTransaction(options, function (err, hash) {
+            this.eth.sendTransaction(options, function(err, hash) {
                 if (err) {
                     callback(err);
                 } else {
@@ -3032,7 +3021,7 @@ var ContractFactory = function (eth, abi) {
  * @returns {ContractFactory} new contract factory
  */
 //var contract = function (abi) {
-    //return new ContractFactory(abi);
+//return new ContractFactory(abi);
 //};
 
 
@@ -3046,7 +3035,7 @@ var ContractFactory = function (eth, abi) {
  * @returns {Contract} returns contract if no callback was passed,
  * otherwise calls callback function (err, contract)
  */
-ContractFactory.prototype.at = function (address, callback) {
+ContractFactory.prototype.at = function(address, callback) {
     var contract = new Contract(this.eth, this.abi, address);
 
     // this functions are not part of prototype,
@@ -3065,7 +3054,7 @@ ContractFactory.prototype.at = function (address, callback) {
  *
  * @method getData
  */
-ContractFactory.prototype.getData = function () {
+ContractFactory.prototype.getData = function() {
     var options = {}; // required!
     var args = Array.prototype.slice.call(arguments);
 
@@ -3087,7 +3076,7 @@ ContractFactory.prototype.getData = function () {
  * @param {Array} abi
  * @param {Address} contract address
  */
-var Contract = function (eth, abi, address) {
+var Contract = function(eth, abi, address) {
     this._eth = eth;
     this.transactionHash = null;
     this.address = address;
@@ -3095,23 +3084,22 @@ var Contract = function (eth, abi, address) {
 };
 
 module.exports = ContractFactory;
-
 },{"../solidity/coder":7,"../utils/utils":20,"./allevents":23,"./event":27,"./function":31}],26:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file errors.js
@@ -3120,43 +3108,42 @@ module.exports = ContractFactory;
  */
 
 module.exports = {
-    InvalidNumberOfSolidityArgs: function () {
+    InvalidNumberOfSolidityArgs: function() {
         return new Error('Invalid number of arguments to Solidity function');
     },
-    InvalidNumberOfRPCParams: function () {
+    InvalidNumberOfRPCParams: function() {
         return new Error('Invalid number of input parameters to RPC method');
     },
-    InvalidConnection: function (host){
-        return new Error('CONNECTION ERROR: Couldn\'t connect to node '+ host +'.');
+    InvalidConnection: function(host) {
+        return new Error('CONNECTION ERROR: Couldn\'t connect to node ' + host + '.');
     },
-    InvalidProvider: function () {
+    InvalidProvider: function() {
         return new Error('Provider not set or invalid');
     },
-    InvalidResponse: function (result){
+    InvalidResponse: function(result) {
         var message = !!result && !!result.error && !!result.error.message ? result.error.message : 'Invalid JSON RPC response: ' + JSON.stringify(result);
         return new Error(message);
     },
-    ConnectionTimeout: function (ms){
+    ConnectionTimeout: function(ms) {
         return new Error('CONNECTION TIMEOUT: timeout of ' + ms + ' ms achived');
     }
 };
-
 },{}],27:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file event.js
@@ -3174,7 +3161,7 @@ var watches = require('./methods/watches');
 /**
  * This prototype should be used to create event filters
  */
-var SolidityEvent = function (requestManager, json, address) {
+var SolidityEvent = function(requestManager, json, address) {
     this._requestManager = requestManager;
     this._params = json.inputs;
     this._name = utils.transformToFullName(json);
@@ -3189,10 +3176,10 @@ var SolidityEvent = function (requestManager, json, address) {
  * @param {Bool} decide if returned typed should be indexed
  * @return {Array} array of types
  */
-SolidityEvent.prototype.types = function (indexed) {
-    return this._params.filter(function (i) {
+SolidityEvent.prototype.types = function(indexed) {
+    return this._params.filter(function(i) {
         return i.indexed === indexed;
-    }).map(function (i) {
+    }).map(function(i) {
         return i.type;
     });
 };
@@ -3203,7 +3190,7 @@ SolidityEvent.prototype.types = function (indexed) {
  * @method displayName
  * @return {String} event display name
  */
-SolidityEvent.prototype.displayName = function () {
+SolidityEvent.prototype.displayName = function() {
     return utils.extractDisplayName(this._name);
 };
 
@@ -3213,7 +3200,7 @@ SolidityEvent.prototype.displayName = function () {
  * @method typeName
  * @return {String} event type name
  */
-SolidityEvent.prototype.typeName = function () {
+SolidityEvent.prototype.typeName = function() {
     return utils.extractTypeName(this._name);
 };
 
@@ -3223,7 +3210,7 @@ SolidityEvent.prototype.typeName = function () {
  * @method signature
  * @return {String} event signature
  */
-SolidityEvent.prototype.signature = function () {
+SolidityEvent.prototype.signature = function() {
     return sha3(this._name);
 };
 
@@ -3235,14 +3222,14 @@ SolidityEvent.prototype.signature = function () {
  * @param {Object} options
  * @return {Object} everything combined together and encoded
  */
-SolidityEvent.prototype.encode = function (indexed, options) {
+SolidityEvent.prototype.encode = function(indexed, options) {
     indexed = indexed || {};
     options = options || {};
     var result = {};
 
-    ['fromBlock', 'toBlock'].filter(function (f) {
+    ['fromBlock', 'toBlock'].filter(function(f) {
         return options[f] !== undefined;
-    }).forEach(function (f) {
+    }).forEach(function(f) {
         result[f] = formatters.inputBlockNumberFormatter(options[f]);
     });
 
@@ -3253,16 +3240,16 @@ SolidityEvent.prototype.encode = function (indexed, options) {
         result.topics.push('0x' + this.signature());
     }
 
-    var indexedTopics = this._params.filter(function (i) {
+    var indexedTopics = this._params.filter(function(i) {
         return i.indexed === true;
-    }).map(function (i) {
+    }).map(function(i) {
         var value = indexed[i.name];
         if (value === undefined || value === null) {
             return null;
         }
 
         if (utils.isArray(value)) {
-            return value.map(function (v) {
+            return value.map(function(v) {
                 return '0x' + coder.encodeParam(i.type, v);
             });
         }
@@ -3281,14 +3268,14 @@ SolidityEvent.prototype.encode = function (indexed, options) {
  * @param {Object} data
  * @return {Object} result object with decoded indexed && not indexed params
  */
-SolidityEvent.prototype.decode = function (data) {
+SolidityEvent.prototype.decode = function(data) {
 
     data.data = data.data || '';
     data.topics = data.topics || [];
 
 
     var argTopics = this._anonymous ? data.topics : data.topics.slice(1);
-    var indexedData = argTopics.map(function (topics) { return topics.slice(2); }).join("");
+    var indexedData = argTopics.map(function(topics) { return topics.slice(2); }).join("");
     var indexedParams = coder.decodeParams(this.types(true), indexedData);
 
     var notIndexedData = data.data.slice(2);
@@ -3298,7 +3285,7 @@ SolidityEvent.prototype.decode = function (data) {
     result.event = this.displayName();
     result.address = data.address;
 
-    result.args = this._params.reduce(function (acc, current) {
+    result.args = this._params.reduce(function(acc, current) {
         acc[current.name] = current.indexed ? indexedParams.shift() : notIndexedParams.shift();
         return acc;
     }, {});
@@ -3317,13 +3304,13 @@ SolidityEvent.prototype.decode = function (data) {
  * @param {Object} options
  * @return {Object} filter object
  */
-SolidityEvent.prototype.execute = function (indexed, options, callback) {
+SolidityEvent.prototype.execute = function(indexed, options, callback) {
 
     if (utils.isFunction(arguments[arguments.length - 1])) {
         callback = arguments[arguments.length - 1];
-        if(arguments.length === 2)
+        if (arguments.length === 2)
             options = null;
-        if(arguments.length === 1) {
+        if (arguments.length === 1) {
             options = null;
             indexed = {};
         }
@@ -3340,7 +3327,7 @@ SolidityEvent.prototype.execute = function (indexed, options, callback) {
  * @method attachToContract
  * @param {Contract}
  */
-SolidityEvent.prototype.attachToContract = function (contract) {
+SolidityEvent.prototype.attachToContract = function(contract) {
     var execute = this.execute.bind(this);
     var displayName = this.displayName();
     if (!contract[displayName]) {
@@ -3350,8 +3337,6 @@ SolidityEvent.prototype.attachToContract = function (contract) {
 };
 
 module.exports = SolidityEvent;
-
-
 },{"../solidity/coder":7,"../utils/sha3":19,"../utils/utils":20,"./filter":29,"./formatters":30,"./methods/watches":43}],28:[function(require,module,exports){
 var formatters = require('./formatters');
 var utils = require('./../utils/utils');
@@ -3360,36 +3345,36 @@ var Property = require('./property');
 
 // TODO: refactor, so the input params are not altered.
 // it's necessary to make same 'extension' work with multiple providers
-var extend = function (web3) {
+var extend = function(web3i) {
     /* jshint maxcomplexity:5 */
-    var ex = function (extension) {
+    var ex = function(extension) {
 
         var extendedObject;
         if (extension.property) {
-            if (!web3[extension.property]) {
-                web3[extension.property] = {};
+            if (!web3i[extension.property]) {
+                web3i[extension.property] = {};
             }
-            extendedObject = web3[extension.property];
+            extendedObject = web3i[extension.property];
         } else {
-            extendedObject = web3;
+            extendedObject = web3i;
         }
 
         if (extension.methods) {
-            extension.methods.forEach(function (method) {
+            extension.methods.forEach(function(method) {
                 method.attachToObject(extendedObject);
-                method.setRequestManager(web3._requestManager);
+                method.setRequestManager(web3i._requestManager);
             });
         }
 
         if (extension.properties) {
-            extension.properties.forEach(function (property) {
+            extension.properties.forEach(function(property) {
                 property.attachToObject(extendedObject);
-                property.setRequestManager(web3._requestManager);
+                property.setRequestManager(web3i._requestManager);
             });
         }
     };
 
-    ex.formatters = formatters; 
+    ex.formatters = formatters;
     ex.utils = utils;
     ex.Method = Method;
     ex.Property = Property;
@@ -3400,24 +3385,22 @@ var extend = function (web3) {
 
 
 module.exports = extend;
-
-
 },{"./../utils/utils":20,"./formatters":30,"./method":36,"./property":45}],29:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file filter.js
  * @authors:
@@ -3433,19 +3416,19 @@ var formatters = require('./formatters');
 var utils = require('../utils/utils');
 
 /**
-* Converts a given topic to a hex string, but also allows null values.
-*
-* @param {Mixed} value
-* @return {String}
-*/
-var toTopic = function(value){
+ * Converts a given topic to a hex string, but also allows null values.
+ *
+ * @param {Mixed} value
+ * @return {String}
+ */
+var toTopic = function(value) {
 
-    if(value === null || typeof value === 'undefined')
+    if (value === null || typeof value === 'undefined')
         return null;
 
     value = String(value);
 
-    if(value.indexOf('0x') === 0)
+    if (value.indexOf('0x') === 0)
         return value;
     else
         return utils.fromUtf8(value);
@@ -3454,7 +3437,7 @@ var toTopic = function(value){
 /// This method should be called on options object, to verify deprecated properties && lazy load dynamic ones
 /// @param should be string or object
 /// @returns options string or object
-var getOptions = function (options, type) {
+var getOptions = function(options, type) {
     /*jshint maxcomplexity: 6 */
 
     if (utils.isString(options)) {
@@ -3464,12 +3447,12 @@ var getOptions = function (options, type) {
     options = options || {};
 
 
-    switch(type) {
+    switch (type) {
         case 'eth':
 
             // make sure topics, get converted to hex
             options.topics = options.topics || [];
-            options.topics = options.topics.map(function(topic){
+            options.topics = options.topics.map(function(topic) {
                 return (utils.isArray(topic)) ? topic.map(toTopic) : toTopic(topic);
             });
 
@@ -3493,17 +3476,17 @@ Adds the callback and sets up the methods, to iterate over the results.
 @param {Object} self
 @param {function} callback
 */
-var getLogsAtStart = function(self, callback){
+var getLogsAtStart = function(self, callback) {
     // call getFilterLogs for the first watch callback start
     if (!utils.isString(self.options)) {
-        self.get(function (err, messages) {
+        self.get(function(err, messages) {
             // don't send all the responses to all the watches again... just to self one
             if (err) {
                 callback(err);
             }
 
-            if(utils.isArray(messages)) {
-                messages.forEach(function (message) {
+            if (utils.isArray(messages)) {
+                messages.forEach(function(message) {
                     callback(null, message);
                 });
             }
@@ -3519,17 +3502,17 @@ Adds the callback and sets up the methods, to iterate over the results.
 */
 var pollFilter = function(self) {
 
-    var onMessage = function (error, messages) {
+    var onMessage = function(error, messages) {
         if (error) {
-            return self.callbacks.forEach(function (callback) {
+            return self.callbacks.forEach(function(callback) {
                 callback(error);
             });
         }
 
-        if(utils.isArray(messages)) {
-            messages.forEach(function (message) {
+        if (utils.isArray(messages)) {
+            messages.forEach(function(message) {
                 message = self.formatter ? self.formatter(message) : message;
-                self.callbacks.forEach(function (callback) {
+                self.callbacks.forEach(function(callback) {
                     callback(null, message);
                 });
             });
@@ -3543,10 +3526,10 @@ var pollFilter = function(self) {
 
 };
 
-var Filter = function (options, type, requestManager, methods, formatter, callback, filterCreationErrorCallback) {
+var Filter = function(options, type, requestManager, methods, formatter, callback, filterCreationErrorCallback) {
     var self = this;
     var implementation = {};
-    methods.forEach(function (method) {
+    methods.forEach(function(method) {
         method.setRequestManager(requestManager);
         method.attachToObject(implementation);
     });
@@ -3558,33 +3541,33 @@ var Filter = function (options, type, requestManager, methods, formatter, callba
     this.getLogsCallbacks = [];
     this.pollFilters = [];
     this.formatter = formatter;
-    this.implementation.newFilter(this.options, function(error, id){
-        if(error) {
-            self.callbacks.forEach(function(cb){
+    this.implementation.newFilter(this.options, function(error, id) {
+        if (error) {
+            self.callbacks.forEach(function(cb) {
                 cb(error);
             });
             if (typeof filterCreationErrorCallback === 'function') {
-              filterCreationErrorCallback(error);
+                filterCreationErrorCallback(error);
             }
         } else {
             self.filterId = id;
 
             // check if there are get pending callbacks as a consequence
             // of calling get() with filterId unassigned.
-            self.getLogsCallbacks.forEach(function (cb){
+            self.getLogsCallbacks.forEach(function(cb) {
                 self.get(cb);
             });
             self.getLogsCallbacks = [];
 
             // get filter logs for the already existing watch calls
-            self.callbacks.forEach(function(cb){
+            self.callbacks.forEach(function(cb) {
                 getLogsAtStart(self, cb);
             });
-            if(self.callbacks.length > 0)
+            if (self.callbacks.length > 0)
                 pollFilter(self);
 
             // start to watch immediately
-            if(typeof callback === 'function') {
+            if (typeof callback === 'function') {
                 return self.watch(callback);
             }
         }
@@ -3593,10 +3576,10 @@ var Filter = function (options, type, requestManager, methods, formatter, callba
     return this;
 };
 
-Filter.prototype.watch = function (callback) {
+Filter.prototype.watch = function(callback) {
     this.callbacks.push(callback);
 
-    if(this.filterId) {
+    if (this.filterId) {
         getLogsAtStart(this, callback);
         pollFilter(this);
     }
@@ -3604,7 +3587,7 @@ Filter.prototype.watch = function (callback) {
     return this;
 };
 
-Filter.prototype.stopWatching = function (callback) {
+Filter.prototype.stopWatching = function(callback) {
     this.requestManager.stopPolling(this.filterId);
     this.callbacks = [];
     // remove filter async
@@ -3615,7 +3598,7 @@ Filter.prototype.stopWatching = function (callback) {
     }
 };
 
-Filter.prototype.get = function (callback) {
+Filter.prototype.get = function(callback) {
     var self = this;
     if (utils.isFunction(callback)) {
         if (this.filterId === null) {
@@ -3623,11 +3606,11 @@ Filter.prototype.get = function (callback) {
             // when newFilter() assigns it.
             this.getLogsCallbacks.push(callback);
         } else {
-            this.implementation.getLogs(this.filterId, function(err, res){
+            this.implementation.getLogs(this.filterId, function(err, res) {
                 if (err) {
                     callback(err);
                 } else {
-                    callback(null, res.map(function (log) {
+                    callback(null, res.map(function(log) {
                         return self.formatter ? self.formatter(log) : log;
                     }));
                 }
@@ -3638,7 +3621,7 @@ Filter.prototype.get = function (callback) {
             throw new Error('Filter ID Error: filter().get() can\'t be chained synchronous, please provide a callback for the get() method.');
         }
         var logs = this.implementation.getLogs(this.filterId);
-        return logs.map(function (log) {
+        return logs.map(function(log) {
             return self.formatter ? self.formatter(log) : log;
         });
     }
@@ -3647,24 +3630,22 @@ Filter.prototype.get = function (callback) {
 };
 
 module.exports = Filter;
-
-
 },{"../utils/utils":20,"./formatters":30}],30:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file formatters.js
@@ -3713,7 +3694,18 @@ var inputDefaultBlockNumberFormatter = function(blockNumber) {
     }
     return inputBlockNumberFormatter(blockNumber);
 };
-
+/* 
+    添加方法 getSigners 入参 inputBlockNumber
+*/
+var inputBlockNumber = function(inputBlockNumber) {
+        return inputBlockNumber
+    }
+    /* 
+        添加方法 getSignersAtHash 入参 TxHashString
+    */
+var TxHashString = function(TxHashString) {
+    return TxHashString
+}
 var inputBlockNumberFormatter = function(blockNumber) {
     if (blockNumber === undefined) {
         return undefined;
@@ -3770,7 +3762,7 @@ var inputTransactionFormatter = function(options) {
     ['value', 'nonce'].filter(function(key) {
         return options[key] !== undefined;
     }).forEach(function(key) {
-        options[key] = utils.fromDecimal(options[key]);
+        options[key] = utils.fromDecimal(options[key])
     });
 
     return options;
@@ -3963,6 +3955,10 @@ module.exports = {
     inputPostFormatter: inputPostFormatter,
     //gasRes return
     outputBigNumberFormatterToNumber: outputBigNumberFormatterToNumber,
+    //getSigners return 
+    inputBlockNumber: inputBlockNumber,
+    //getSignersAtHash return 
+    TxHashString: TxHashString,
     outputBigNumberFormatter: outputBigNumberFormatter,
     outputTransactionFormatter: outputTransactionFormatter,
     outputTransactionReceiptFormatter: outputTransactionReceiptFormatter,
@@ -3973,20 +3969,20 @@ module.exports = {
 };
 },{"../utils/config":18,"../utils/utils":20,"./iban":33}],31:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file function.js
@@ -4003,12 +3999,12 @@ var sha3 = require('../utils/sha3');
 /**
  * This prototype should be used to call/sendTransaction to solidity functions
  */
-var SolidityFunction = function (eth, json, address) {
+var SolidityFunction = function(eth, json, address) {
     this._eth = eth;
-    this._inputTypes = json.inputs.map(function (i) {
+    this._inputTypes = json.inputs.map(function(i) {
         return i.type;
     });
-    this._outputTypes = json.outputs.map(function (i) {
+    this._outputTypes = json.outputs.map(function(i) {
         return i.type;
     });
     this._constant = json.constant;
@@ -4017,14 +4013,14 @@ var SolidityFunction = function (eth, json, address) {
     this._address = address;
 };
 
-SolidityFunction.prototype.extractCallback = function (args) {
+SolidityFunction.prototype.extractCallback = function(args) {
     if (utils.isFunction(args[args.length - 1])) {
         return args.pop(); // modify the args array!
     }
 };
 
-SolidityFunction.prototype.extractDefaultBlock = function (args) {
-    if (args.length > this._inputTypes.length && !utils.isObject(args[args.length -1])) {
+SolidityFunction.prototype.extractDefaultBlock = function(args) {
+    if (args.length > this._inputTypes.length && !utils.isObject(args[args.length - 1])) {
         return formatters.inputDefaultBlockNumberFormatter(args.pop()); // modify the args array!
     }
 };
@@ -4036,13 +4032,13 @@ SolidityFunction.prototype.extractDefaultBlock = function (args) {
  * @param {Array} arguments
  * @throws {Error} if it is not
  */
-SolidityFunction.prototype.validateArgs = function (args) {
-    var inputArgs = args.filter(function (a) {
-      // filter the options object but not arguments that are arrays
-      return !( (utils.isObject(a) === true) &&
-                (utils.isArray(a) === false) &&
-                (utils.isBigNumber(a) === false)
-              );
+SolidityFunction.prototype.validateArgs = function(args) {
+    var inputArgs = args.filter(function(a) {
+        // filter the options object but not arguments that are arrays
+        return !((utils.isObject(a) === true) &&
+            (utils.isArray(a) === false) &&
+            (utils.isBigNumber(a) === false)
+        );
     });
     if (inputArgs.length !== this._inputTypes.length) {
         throw errors.InvalidNumberOfSolidityArgs();
@@ -4056,9 +4052,9 @@ SolidityFunction.prototype.validateArgs = function (args) {
  * @param {Array} solidity function params
  * @param {Object} optional payload options
  */
-SolidityFunction.prototype.toPayload = function (args) {
+SolidityFunction.prototype.toPayload = function(args) {
     var options = {};
-    if (args.length > this._inputTypes.length && utils.isObject(args[args.length -1])) {
+    if (args.length > this._inputTypes.length && utils.isObject(args[args.length - 1])) {
         options = args[args.length - 1];
     }
     this.validateArgs(args);
@@ -4073,12 +4069,12 @@ SolidityFunction.prototype.toPayload = function (args) {
  * @method signature
  * @return {String} function signature
  */
-SolidityFunction.prototype.signature = function () {
+SolidityFunction.prototype.signature = function() {
     return sha3(this._name).slice(0, 8);
 };
 
 
-SolidityFunction.prototype.unpackOutput = function (output) {
+SolidityFunction.prototype.unpackOutput = function(output) {
     if (!output) {
         return;
     }
@@ -4098,8 +4094,8 @@ SolidityFunction.prototype.unpackOutput = function (output) {
  *   error and result.
  * @return {String} output bytes
  */
-SolidityFunction.prototype.call = function () {
-    var args = Array.prototype.slice.call(arguments).filter(function (a) {return a !== undefined; });
+SolidityFunction.prototype.call = function() {
+    var args = Array.prototype.slice.call(arguments).filter(function(a) { return a !== undefined; });
     var callback = this.extractCallback(args);
     var defaultBlock = this.extractDefaultBlock(args);
     var payload = this.toPayload(args);
@@ -4111,14 +4107,13 @@ SolidityFunction.prototype.call = function () {
     }
 
     var self = this;
-    this._eth.call(payload, defaultBlock, function (error, output) {
+    this._eth.call(payload, defaultBlock, function(error, output) {
         if (error) return callback(error, null);
 
         var unpacked = null;
         try {
             unpacked = self.unpackOutput(output);
-        }
-        catch (e) {
+        } catch (e) {
             error = e;
         }
 
@@ -4131,8 +4126,8 @@ SolidityFunction.prototype.call = function () {
  *
  * @method sendTransaction
  */
-SolidityFunction.prototype.sendTransaction = function () {
-    var args = Array.prototype.slice.call(arguments).filter(function (a) {return a !== undefined; });
+SolidityFunction.prototype.sendTransaction = function() {
+    var args = Array.prototype.slice.call(arguments).filter(function(a) { return a !== undefined; });
     var callback = this.extractCallback(args);
     var payload = this.toPayload(args);
 
@@ -4152,7 +4147,7 @@ SolidityFunction.prototype.sendTransaction = function () {
  *
  * @method estimateGas
  */
-SolidityFunction.prototype.estimateGas = function () {
+SolidityFunction.prototype.estimateGas = function() {
     var args = Array.prototype.slice.call(arguments);
     var callback = this.extractCallback(args);
     var payload = this.toPayload(args);
@@ -4170,7 +4165,7 @@ SolidityFunction.prototype.estimateGas = function () {
  * @method getData
  * @return {String} the encoded data
  */
-SolidityFunction.prototype.getData = function () {
+SolidityFunction.prototype.getData = function() {
     var args = Array.prototype.slice.call(arguments);
     var payload = this.toPayload(args);
 
@@ -4183,7 +4178,7 @@ SolidityFunction.prototype.getData = function () {
  * @method displayName
  * @return {String} display name of the function
  */
-SolidityFunction.prototype.displayName = function () {
+SolidityFunction.prototype.displayName = function() {
     return utils.extractDisplayName(this._name);
 };
 
@@ -4193,7 +4188,7 @@ SolidityFunction.prototype.displayName = function () {
  * @method typeName
  * @return {String} type name of the function
  */
-SolidityFunction.prototype.typeName = function () {
+SolidityFunction.prototype.typeName = function() {
     return utils.extractTypeName(this._name);
 };
 
@@ -4203,7 +4198,7 @@ SolidityFunction.prototype.typeName = function () {
  * @method request
  * @returns {Object}
  */
-SolidityFunction.prototype.request = function () {
+SolidityFunction.prototype.request = function() {
     var args = Array.prototype.slice.call(arguments);
     var callback = this.extractCallback(args);
     var payload = this.toPayload(args);
@@ -4222,7 +4217,7 @@ SolidityFunction.prototype.request = function () {
  *
  * @method execute
  */
-SolidityFunction.prototype.execute = function () {
+SolidityFunction.prototype.execute = function() {
     var transaction = !this._constant;
 
     // send transaction
@@ -4240,7 +4235,7 @@ SolidityFunction.prototype.execute = function () {
  * @method attachToContract
  * @param {Contract}
  */
-SolidityFunction.prototype.attachToContract = function (contract) {
+SolidityFunction.prototype.attachToContract = function(contract) {
     var execute = this.execute.bind(this);
     execute.request = this.request.bind(this);
     execute.call = this.call.bind(this);
@@ -4255,23 +4250,22 @@ SolidityFunction.prototype.attachToContract = function (contract) {
 };
 
 module.exports = SolidityFunction;
-
 },{"../solidity/coder":7,"../utils/sha3":19,"../utils/utils":20,"./errors":26,"./formatters":30}],32:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file httpprovider.js
  * @authors:
@@ -4287,10 +4281,10 @@ var errors = require('./errors');
 
 // browser
 if (typeof window !== 'undefined' && window.XMLHttpRequest) {
-  XMLHttpRequest = window.XMLHttpRequest; // jshint ignore: line
-// node
+    XMLHttpRequest = window.XMLHttpRequest; // jshint ignore: line
+    // node
 } else {
-  XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore: line
+    XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore: line
 }
 
 var XHR2 = require('xhr2'); // jshint ignore: line
@@ -4298,12 +4292,12 @@ var XHR2 = require('xhr2'); // jshint ignore: line
 /**
  * HttpProvider should be used to send rpc calls over http
  */
-var HttpProvider = function (host, timeout, user, password, headers) {
-  this.host = host || 'http://localhost:8545';
-  this.timeout = timeout || 0;
-  this.user = user;
-  this.password = password;
-  this.headers = headers;
+var HttpProvider = function(host, timeout, user, password, headers) {
+    this.host = host || 'http://localhost:8545';
+    this.timeout = timeout || 0;
+    this.user = user;
+    this.password = password;
+    this.headers = headers;
 };
 
 /**
@@ -4313,27 +4307,28 @@ var HttpProvider = function (host, timeout, user, password, headers) {
  * @param {Boolean} true if request should be async
  * @return {XMLHttpRequest} object
  */
-HttpProvider.prototype.prepareRequest = function (async) {
-  var request;
+HttpProvider.prototype.prepareRequest = function(async) {
+    var request;
 
-  if (async) {
-    request = new XHR2();
-    request.timeout = this.timeout;
-  } else {
-    request = new XMLHttpRequest();
-  }
+    if (async) {
+        request = new XHR2();
+        request.timeout = this.timeout;
+    } else {
+        request = new XMLHttpRequest();
+    }
 
-  request.open('POST', this.host, async);
-  if (this.user && this.password) {
-    var auth = 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64');
-    request.setRequestHeader('Authorization', auth);
-  } request.setRequestHeader('Content-Type', 'application/json');
-  if(this.headers) {
-      this.headers.forEach(function(header) {
-          request.setRequestHeader(header.name, header.value);
-      });
-  }
-  return request;
+    request.open('POST', this.host, async);
+    if (this.user && this.password) {
+        var auth = 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64');
+        request.setRequestHeader('Authorization', auth);
+    }
+    request.setRequestHeader('Content-Type', 'application/json');
+    if (this.headers) {
+        this.headers.forEach(function(header) {
+            request.setRequestHeader(header.name, header.value);
+        });
+    }
+    return request;
 };
 
 /**
@@ -4343,24 +4338,24 @@ HttpProvider.prototype.prepareRequest = function (async) {
  * @param {Object} payload
  * @return {Object} result
  */
-HttpProvider.prototype.send = function (payload) {
-  var request = this.prepareRequest(false);
+HttpProvider.prototype.send = function(payload) {
+    var request = this.prepareRequest(false);
 
-  try {
-    request.send(JSON.stringify(payload));
-  } catch (error) {
-    throw errors.InvalidConnection(this.host);
-  }
+    try {
+        request.send(JSON.stringify(payload));
+    } catch (error) {
+        throw errors.InvalidConnection(this.host);
+    }
 
-  var result = request.responseText;
+    var result = request.responseText;
 
-  try {
-    result = JSON.parse(result);
-  } catch (e) {
-    throw errors.InvalidResponse(request.responseText);
-  }
+    try {
+        result = JSON.parse(result);
+    } catch (e) {
+        throw errors.InvalidResponse(request.responseText);
+    }
 
-  return result;
+    return result;
 };
 
 /**
@@ -4370,33 +4365,33 @@ HttpProvider.prototype.send = function (payload) {
  * @param {Object} payload
  * @param {Function} callback triggered on end with (err, result)
  */
-HttpProvider.prototype.sendAsync = function (payload, callback) {
-  var request = this.prepareRequest(true);
+HttpProvider.prototype.sendAsync = function(payload, callback) {
+    var request = this.prepareRequest(true);
 
-  request.onreadystatechange = function () {
-    if (request.readyState === 4 && request.timeout !== 1) {
-      var result = request.responseText;
-      var error = null;
+    request.onreadystatechange = function() {
+        if (request.readyState === 4 && request.timeout !== 1) {
+            var result = request.responseText;
+            var error = null;
 
-      try {
-        result = JSON.parse(result);
-      } catch (e) {
-        error = errors.InvalidResponse(request.responseText);
-      }
+            try {
+                result = JSON.parse(result);
+            } catch (e) {
+                error = errors.InvalidResponse(request.responseText);
+            }
 
-      callback(error, result);
+            callback(error, result);
+        }
+    };
+
+    request.ontimeout = function() {
+        callback(errors.ConnectionTimeout(this.timeout));
+    };
+
+    try {
+        request.send(JSON.stringify(payload));
+    } catch (error) {
+        callback(errors.InvalidConnection(this.host));
     }
-  };
-
-  request.ontimeout = function () {
-    callback(errors.ConnectionTimeout(this.timeout));
-  };
-
-  try {
-    request.send(JSON.stringify(payload));
-  } catch (error) {
-    callback(errors.InvalidConnection(this.host));
-  }
 };
 
 /**
@@ -4405,38 +4400,37 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
  * @method isConnected
  * @return {Boolean} returns true if request haven't failed. Otherwise false
  */
-HttpProvider.prototype.isConnected = function () {
-  try {
-    this.send({
-      id: 9999999999,
-      jsonrpc: '2.0',
-      method: 'net_listening',
-      params: []
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
+HttpProvider.prototype.isConnected = function() {
+    try {
+        this.send({
+            id: 9999999999,
+            jsonrpc: '2.0',
+            method: 'net_listening',
+            params: []
+        });
+        return true;
+    } catch (e) {
+        return false;
+    }
 };
 
 module.exports = HttpProvider;
-
 },{"./errors":26,"xhr2":86,"xmlhttprequest":17}],33:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file iban.js
@@ -4446,7 +4440,7 @@ module.exports = HttpProvider;
 
 var BigNumber = require('bignumber.js');
 
-var padLeft = function (string, bytes) {
+var padLeft = function(string, bytes) {
     var result = string;
     while (result.length < bytes * 2) {
         result = '0' + result;
@@ -4462,16 +4456,16 @@ var padLeft = function (string, bytes) {
  * @param {String} iban the IBAN
  * @returns {String} the prepared IBAN
  */
-var iso13616Prepare = function (iban) {
+var iso13616Prepare = function(iban) {
     var A = 'A'.charCodeAt(0);
     var Z = 'Z'.charCodeAt(0);
 
     iban = iban.toUpperCase();
-    iban = iban.substr(4) + iban.substr(0,4);
+    iban = iban.substr(4) + iban.substr(0, 4);
 
-    return iban.split('').map(function(n){
+    return iban.split('').map(function(n) {
         var code = n.charCodeAt(0);
-        if (code >= A && code <= Z){
+        if (code >= A && code <= Z) {
             // A = 10, B = 11, ... Z = 35
             return code - A + 10;
         } else {
@@ -4487,11 +4481,11 @@ var iso13616Prepare = function (iban) {
  * @param {String} iban
  * @returns {Number}
  */
-var mod9710 = function (iban) {
+var mod9710 = function(iban) {
     var remainder = iban,
         block;
 
-    while (remainder.length > 2){
+    while (remainder.length > 2) {
         block = remainder.slice(0, 9);
         remainder = parseInt(block, 10) % 97 + remainder.slice(block.length);
     }
@@ -4504,7 +4498,7 @@ var mod9710 = function (iban) {
  *
  * @param {String} iban
  */
-var Iban = function (iban) {
+var Iban = function(iban) {
     this._iban = iban;
 };
 
@@ -4515,7 +4509,7 @@ var Iban = function (iban) {
  * @param {String} address
  * @return {Iban} the IBAN object
  */
-Iban.fromAddress = function (address) {
+Iban.fromAddress = function(address) {
     var asBn = new BigNumber(address, 16);
     var base36 = asBn.toString(36);
     var padded = padLeft(base36, 15);
@@ -4531,7 +4525,7 @@ Iban.fromAddress = function (address) {
  * @param {String} bban the BBAN to convert to IBAN
  * @returns {Iban} the IBAN object
  */
-Iban.fromBban = function (bban) {
+Iban.fromBban = function(bban) {
     var countryCode = 'XE';
 
     var remainder = mod9710(iso13616Prepare(countryCode + '00' + bban));
@@ -4547,7 +4541,7 @@ Iban.fromBban = function (bban) {
  * @param {Object} options, required options are "institution" and "identifier"
  * @return {Iban} the IBAN object
  */
-Iban.createIndirect = function (options) {
+Iban.createIndirect = function(options) {
     return Iban.fromBban('ETH' + options.institution + options.identifier);
 };
 
@@ -4558,7 +4552,7 @@ Iban.createIndirect = function (options) {
  * @param {String} iban string
  * @return {Boolean} true if it is valid IBAN
  */
-Iban.isValid = function (iban) {
+Iban.isValid = function(iban) {
     var i = new Iban(iban);
     return i.isValid();
 };
@@ -4569,7 +4563,7 @@ Iban.isValid = function (iban) {
  * @method isValid
  * @returns {Boolean} true if it is, otherwise false
  */
-Iban.prototype.isValid = function () {
+Iban.prototype.isValid = function() {
     return /^XE[0-9]{2}(ETH[0-9A-Z]{13}|[0-9A-Z]{30,31})$/.test(this._iban) &&
         mod9710(iso13616Prepare(this._iban)) === 1;
 };
@@ -4580,7 +4574,7 @@ Iban.prototype.isValid = function () {
  * @method isDirect
  * @returns {Boolean} true if it is, otherwise false
  */
-Iban.prototype.isDirect = function () {
+Iban.prototype.isDirect = function() {
     return this._iban.length === 34 || this._iban.length === 35;
 };
 
@@ -4590,7 +4584,7 @@ Iban.prototype.isDirect = function () {
  * @method isIndirect
  * @returns {Boolean} true if it is, otherwise false
  */
-Iban.prototype.isIndirect = function () {
+Iban.prototype.isIndirect = function() {
     return this._iban.length === 20;
 };
 
@@ -4601,7 +4595,7 @@ Iban.prototype.isIndirect = function () {
  * @method checksum
  * @returns {String} checksum
  */
-Iban.prototype.checksum = function () {
+Iban.prototype.checksum = function() {
     return this._iban.substr(2, 2);
 };
 
@@ -4612,7 +4606,7 @@ Iban.prototype.checksum = function () {
  * @method institution
  * @returns {String} institution identifier
  */
-Iban.prototype.institution = function () {
+Iban.prototype.institution = function() {
     return this.isIndirect() ? this._iban.substr(7, 4) : '';
 };
 
@@ -4623,7 +4617,7 @@ Iban.prototype.institution = function () {
  * @method client
  * @returns {String} client identifier
  */
-Iban.prototype.client = function () {
+Iban.prototype.client = function() {
     return this.isIndirect() ? this._iban.substr(11) : '';
 };
 
@@ -4633,39 +4627,37 @@ Iban.prototype.client = function () {
  * @method address
  * @returns {String} client direct address
  */
-Iban.prototype.address = function () {
+Iban.prototype.address = function() {
     if (this.isDirect()) {
         var base36 = this._iban.substr(4);
         var asBn = new BigNumber(base36, 36);
         return padLeft(asBn.toString(16), 20);
-    } 
+    }
 
     return '';
 };
 
-Iban.prototype.toString = function () {
+Iban.prototype.toString = function() {
     return this._iban;
 };
 
 module.exports = Iban;
-
-
 },{"bignumber.js":"bignumber.js"}],34:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file ipcprovider.js
  * @authors:
@@ -4679,35 +4671,35 @@ var utils = require('../utils/utils');
 var errors = require('./errors');
 
 
-var IpcProvider = function (path, net) {
+var IpcProvider = function(path, net) {
     var _this = this;
     this.responseCallbacks = {};
     this.path = path;
-    
-    this.connection = net.connect({path: this.path});
 
-    this.connection.on('error', function(e){
+    this.connection = net.connect({ path: this.path });
+
+    this.connection.on('error', function(e) {
         console.error('IPC Connection Error', e);
         _this._timeout();
     });
 
-    this.connection.on('end', function(){
+    this.connection.on('end', function() {
         _this._timeout();
-    }); 
+    });
 
 
     // LISTEN FOR CONNECTION RESPONSES
     this.connection.on('data', function(data) {
         /*jshint maxcomplexity: 6 */
 
-        _this._parseResponse(data.toString()).forEach(function(result){
+        _this._parseResponse(data.toString()).forEach(function(result) {
 
             var id = null;
 
             // get the id which matches the returned id
-            if(utils.isArray(result)) {
-                result.forEach(function(load){
-                    if(_this.responseCallbacks[load.id])
+            if (utils.isArray(result)) {
+                result.forEach(function(load) {
+                    if (_this.responseCallbacks[load.id])
                         id = load.id;
                 });
             } else {
@@ -4715,7 +4707,7 @@ var IpcProvider = function (path, net) {
             }
 
             // fire the callback
-            if(_this.responseCallbacks[id]) {
+            if (_this.responseCallbacks[id]) {
                 _this.responseCallbacks[id](null, result);
                 delete _this.responseCallbacks[id];
             }
@@ -4732,19 +4724,19 @@ Will parse the response and make an array out of it.
 IpcProvider.prototype._parseResponse = function(data) {
     var _this = this,
         returnValues = [];
-    
+
     // DE-CHUNKER
     var dechunkedData = data
-        .replace(/\}[\n\r]?\{/g,'}|--|{') // }{
-        .replace(/\}\][\n\r]?\[\{/g,'}]|--|[{') // }][{
-        .replace(/\}[\n\r]?\[\{/g,'}|--|[{') // }[{
-        .replace(/\}\][\n\r]?\{/g,'}]|--|{') // }]{
+        .replace(/\}[\n\r]?\{/g, '}|--|{') // }{
+        .replace(/\}\][\n\r]?\[\{/g, '}]|--|[{') // }][{
+        .replace(/\}[\n\r]?\[\{/g, '}|--|[{') // }[{
+        .replace(/\}\][\n\r]?\{/g, '}]|--|{') // }]{
         .split('|--|');
 
-    dechunkedData.forEach(function(data){
+    dechunkedData.forEach(function(data) {
 
         // prepend the last chunk
-        if(_this.lastChunk)
+        if (_this.lastChunk)
             data = _this.lastChunk + data;
 
         var result = null;
@@ -4752,13 +4744,13 @@ IpcProvider.prototype._parseResponse = function(data) {
         try {
             result = JSON.parse(data);
 
-        } catch(e) {
+        } catch (e) {
 
             _this.lastChunk = data;
 
             // start timeout to cancel all requests
             clearTimeout(_this.lastChunkTimeout);
-            _this.lastChunkTimeout = setTimeout(function(){
+            _this.lastChunkTimeout = setTimeout(function() {
                 _this._timeout();
                 throw errors.InvalidResponse(data);
             }, 1000 * 15);
@@ -4770,7 +4762,7 @@ IpcProvider.prototype._parseResponse = function(data) {
         clearTimeout(_this.lastChunkTimeout);
         _this.lastChunk = null;
 
-        if(result)
+        if (result)
             returnValues.push(result);
     });
 
@@ -4798,8 +4790,8 @@ Timeout all requests when the end/error event is fired
 @method _timeout
 */
 IpcProvider.prototype._timeout = function() {
-    for(var key in this.responseCallbacks) {
-        if(this.responseCallbacks.hasOwnProperty(key)){
+    for (var key in this.responseCallbacks) {
+        if (this.responseCallbacks.hasOwnProperty(key)) {
             this.responseCallbacks[key](errors.InvalidConnection('on IPC'));
             delete this.responseCallbacks[key];
         }
@@ -4816,40 +4808,40 @@ IpcProvider.prototype.isConnected = function() {
     var _this = this;
 
     // try reconnect, when connection is gone
-    if(!_this.connection.writable)
-        _this.connection.connect({path: _this.path});
+    if (!_this.connection.writable)
+        _this.connection.connect({ path: _this.path });
 
     return !!this.connection.writable;
 };
 
-IpcProvider.prototype.send = function (payload) {
+IpcProvider.prototype.send = function(payload) {
 
-    if(this.connection.writeSync) {
+    if (this.connection.writeSync) {
         var result;
 
         // try reconnect, when connection is gone
-        if(!this.connection.writable)
-            this.connection.connect({path: this.path});
+        if (!this.connection.writable)
+            this.connection.connect({ path: this.path });
 
         var data = this.connection.writeSync(JSON.stringify(payload));
 
         try {
             result = JSON.parse(data);
-        } catch(e) {
-            throw errors.InvalidResponse(data);                
+        } catch (e) {
+            throw errors.InvalidResponse(data);
         }
 
         return result;
 
     } else {
-        throw new Error('You tried to send "'+ payload.method +'" synchronously. Synchronous requests are not supported by the IPC provider.');
+        throw new Error('You tried to send "' + payload.method + '" synchronously. Synchronous requests are not supported by the IPC provider.');
     }
 };
 
-IpcProvider.prototype.sendAsync = function (payload, callback) {
+IpcProvider.prototype.sendAsync = function(payload, callback) {
     // try reconnect, when connection is gone
-    if(!this.connection.writable)
-        this.connection.connect({path: this.path});
+    if (!this.connection.writable)
+        this.connection.connect({ path: this.path });
 
 
     this.connection.write(JSON.stringify(payload));
@@ -4857,24 +4849,22 @@ IpcProvider.prototype.sendAsync = function (payload, callback) {
 };
 
 module.exports = IpcProvider;
-
-
 },{"../utils/utils":20,"./errors":26}],35:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file jsonrpc.js
  * @authors:
@@ -4896,7 +4886,7 @@ var Jsonrpc = {
  * @param {Array} params, an array of method params, optional
  * @returns {Object} valid jsonrpc payload object
  */
-Jsonrpc.toPayload = function (method, params) {
+Jsonrpc.toPayload = function(method, params) {
     if (!method)
         console.error('jsonrpc method should be specified!');
 
@@ -4918,15 +4908,15 @@ Jsonrpc.toPayload = function (method, params) {
  * @param {Object}
  * @returns {Boolean} true if response is valid, otherwise false
  */
-Jsonrpc.isValidResponse = function (response) {
+Jsonrpc.isValidResponse = function(response) {
     return Array.isArray(response) ? response.every(validateSingleMessage) : validateSingleMessage(response);
 
-    function validateSingleMessage(message){
-      return !!message &&
-        !message.error &&
-        message.jsonrpc === '2.0' &&
-        typeof message.id === 'number' &&
-        message.result !== undefined; // only undefined is not valid json object
+    function validateSingleMessage(message) {
+        return !!message &&
+            !message.error &&
+            message.jsonrpc === '2.0' &&
+            typeof message.id === 'number' &&
+            message.result !== undefined; // only undefined is not valid json object
     }
 };
 
@@ -4937,31 +4927,29 @@ Jsonrpc.isValidResponse = function (response) {
  * @param {Array} messages, an array of objects with method (required) and params (optional) fields
  * @returns {Array} batch payload
  */
-Jsonrpc.toBatchPayload = function (messages) {
-    return messages.map(function (message) {
+Jsonrpc.toBatchPayload = function(messages) {
+    return messages.map(function(message) {
         return Jsonrpc.toPayload(message.method, message.params);
     });
 };
 
 module.exports = Jsonrpc;
-
-
 },{}],36:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file method.js
@@ -4972,7 +4960,7 @@ module.exports = Jsonrpc;
 var utils = require('../utils/utils');
 var errors = require('./errors');
 
-var Method = function (options) {
+var Method = function(options) {
     this.name = options.name;
     this.call = options.call;
     this.params = options.params || 0;
@@ -4981,7 +4969,7 @@ var Method = function (options) {
     this.requestManager = null;
 };
 
-Method.prototype.setRequestManager = function (rm) {
+Method.prototype.setRequestManager = function(rm) {
     this.requestManager = rm;
 };
 
@@ -4992,7 +4980,7 @@ Method.prototype.setRequestManager = function (rm) {
  * @param {Array} arguments
  * @return {String} name of jsonrpc method
  */
-Method.prototype.getCall = function (args) {
+Method.prototype.getCall = function(args) {
     return utils.isFunction(this.call) ? this.call(args) : this.call;
 };
 
@@ -5003,7 +4991,7 @@ Method.prototype.getCall = function (args) {
  * @param {Array} arguments
  * @return {Function|Null} callback, if exists
  */
-Method.prototype.extractCallback = function (args) {
+Method.prototype.extractCallback = function(args) {
     if (utils.isFunction(args[args.length - 1])) {
         return args.pop(); // modify the args array!
     }
@@ -5016,7 +5004,7 @@ Method.prototype.extractCallback = function (args) {
  * @param {Array} arguments
  * @throws {Error} if it is not
  */
-Method.prototype.validateArgs = function (args) {
+Method.prototype.validateArgs = function(args) {
     if (args.length !== this.params) {
         throw errors.InvalidNumberOfRPCParams();
     }
@@ -5029,12 +5017,12 @@ Method.prototype.validateArgs = function (args) {
  * @param {Array}
  * @return {Array}
  */
-Method.prototype.formatInput = function (args) {
+Method.prototype.formatInput = function(args) {
     if (!this.inputFormatter) {
         return args;
     }
 
-    return this.inputFormatter.map(function (formatter, index) {
+    return this.inputFormatter.map(function(formatter, index) {
         return formatter ? formatter(args[index]) : args[index];
     });
 };
@@ -5046,7 +5034,7 @@ Method.prototype.formatInput = function (args) {
  * @param {Object}
  * @return {Object}
  */
-Method.prototype.formatOutput = function (result) {
+Method.prototype.formatOutput = function(result) {
     return this.outputFormatter && result ? this.outputFormatter(result) : result;
 };
 
@@ -5057,7 +5045,7 @@ Method.prototype.formatOutput = function (result) {
  * @param {Array} args
  * @return {Object}
  */
-Method.prototype.toPayload = function (args) {
+Method.prototype.toPayload = function(args) {
     var call = this.getCall(args);
     var callback = this.extractCallback(args);
     var params = this.formatInput(args);
@@ -5070,7 +5058,7 @@ Method.prototype.toPayload = function (args) {
     };
 };
 
-Method.prototype.attachToObject = function (obj) {
+Method.prototype.attachToObject = function(obj) {
     var func = this.buildCall();
     func.call = this.call; // TODO!!! that's ugly. filter.js uses it
     var name = this.name.split('.');
@@ -5078,16 +5066,16 @@ Method.prototype.attachToObject = function (obj) {
         obj[name[0]] = obj[name[0]] || {};
         obj[name[0]][name[1]] = func;
     } else {
-        obj[name[0]] = func; 
+        obj[name[0]] = func;
     }
 };
 
 Method.prototype.buildCall = function() {
     var method = this;
-    var send = function () {
+    var send = function() {
         var payload = method.toPayload(Array.prototype.slice.call(arguments));
         if (payload.callback) {
-            return method.requestManager.sendAsync(payload, function (err, result) {
+            return method.requestManager.sendAsync(payload, function(err, result) {
                 payload.callback(err, method.formatOutput(result));
             });
         }
@@ -5104,30 +5092,29 @@ Method.prototype.buildCall = function() {
  * @param {...} params
  * @return {Object} jsonrpc request
  */
-Method.prototype.request = function () {
+Method.prototype.request = function() {
     var payload = this.toPayload(Array.prototype.slice.call(arguments));
     payload.format = this.formatOutput.bind(this);
     return payload;
 };
 
 module.exports = Method;
-
 },{"../utils/utils":20,"./errors":26}],37:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file db.js
  * @authors:
@@ -5137,18 +5124,18 @@ module.exports = Method;
 
 var Method = require('../method');
 
-var DB = function (web3) {
-    this._requestManager = web3._requestManager;
+var DB = function(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
-    
-    methods().forEach(function(method) { 
+
+    methods().forEach(function(method) {
         method.attachToObject(self);
-        method.setRequestManager(web3._requestManager);
+        method.setRequestManager(web3i._requestManager);
     });
 };
 
-var methods = function () {
+var methods = function() {
     var putString = new Method({
         name: 'putString',
         call: 'db_putString',
@@ -5179,23 +5166,22 @@ var methods = function () {
 };
 
 module.exports = DB;
-
 },{"../method":36}],38:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file eth.js
@@ -5239,8 +5225,8 @@ var uncleCountCall = function(args) {
     return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'inb_getUncleCountByBlockHash' : 'inb_getUncleCountByBlockNumber';
 };
 
-function Inb(iweb3) {
-    this._requestManager = iweb3._requestManager;
+function Inb(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
 
@@ -5280,7 +5266,7 @@ Object.defineProperty(Inb.prototype, 'defaultAccount', {
 });
 
 var methods = function() {
-    //Resource by zc
+    //1 Resource by zc
     var getRes = new Method({
         name: 'getRes',
         call: 'inb_getRes',
@@ -5288,7 +5274,7 @@ var methods = function() {
         inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter],
         outputFormatter: formatters.outputBigNumberFormatterToNumber
     });
-    //inb by ghy begin
+    //2 inb by ghy begin
     var getUsedRes = new Method({
         name: 'getUsedRes',
         call: 'inb_getUsedRes',
@@ -5296,7 +5282,7 @@ var methods = function() {
         inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter],
         outputFormatter: formatters.outputBigNumberFormatterToNumber
     });
-    //inb by ghy end
+    //3 inb by ghy end
     var getMortgage = new Method({
         name: 'getMortgage',
         call: 'inb_getMortgage',
@@ -5304,12 +5290,80 @@ var methods = function() {
         inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter],
         outputFormatter: formatters.outputBigNumberFormatterToNumber
     });
-    //method minerReward by zpq
+    //4 method minerReward by zpq
     var minerReward = new Method({
         name: 'minerReward',
         call: 'inb_minerReward',
         params: 0
     });
+    //5 method GetLiquidity by zpq
+    var getLiquidity = new Method({
+        name: 'getLiquidity',
+        call: 'inb_getLiquidity',
+        params: 0
+    });
+    // 6 method getCandidateNodesInfo
+    var getCandidateNodesInfo = new Method({
+        name: 'getCandidateNodesInfo',
+        call: 'inb_getCandidateNodesInfo',
+        params: 0
+    });
+    //7 method getSuperNodesInfo
+    var getSuperNodesInfo = new Method({
+        name: 'getSuperNodesInfo',
+        call: 'inb_getSuperNodesInfo',
+        params: 0
+    });
+    //8 method getAccountInfo 
+    var getAccountInfo = new Method({
+        name: 'getAccountInfo',
+        call: 'inb_getAccountInfo',
+        params: 1,
+        inputFormatter: [formatters.inputAddressFormatter]
+    });
+    // 9 Method GetLightTokenByAddress by ssh
+    var getLightTokenByAddress = new Method({
+            name: 'getLightTokenByAddress',
+            call: 'inb_getLightTokenByAddress',
+            params: 1,
+            inputFormatter: [formatters.inputAddressFormatter]
+        })
+        //10 Method getSigners by ssh
+    var getSigners = new Method({
+            name: 'getSigners',
+            call: 'inb_getSigners',
+            params: 1,
+            inputFormatter: [formatters.inputBlockNumber]
+
+        })
+        //11 Method getSignersAtHash by ssh
+    var getSignersAtHash = new Method({
+            name: 'getSignersAtHash',
+            call: 'inb_getSignersAtHash',
+            params: 1,
+            inputFormatter: [formatters.TxHashString]
+        })
+        // 12 Method GetLightTokenAccountByAccountAddress by ssh
+    var getLightTokenAccountByAccountAddress = new Method({
+            name: 'getLightTokenAccountByAccountAddress',
+            call: 'inb_getLightTokenAccountByAccountAddress',
+            params: 1,
+            inputFormatter: [formatters.inputAddressFormatter]
+        })
+        //13 Method GetLightTokenBalanceByAddress by ssh
+    var getLightTokenBalanceByAddress = new Method({
+            name: 'getLightTokenBalanceByAddress',
+            call: 'inb_getLightTokenBalanceByAddress',
+            params: 2,
+            inputFormatter: [formatters.inputAddressFormatter, formatters.inputAddressFormatter]
+        })
+        //14 Method signPaymentTransaction by tx 未调试(类似 sendRawTransaction)
+    var signPaymentTransaction = new Method({
+        name: 'signPaymentTransaction',
+        call: 'inb_signPaymentTransaction',
+        params: 1,
+        inputFormatter: [null]
+    })
     var getBalance = new Method({
         name: 'getBalance',
         call: 'inb_getBalance',
@@ -5483,6 +5537,26 @@ var methods = function() {
         getMortgage,
         //by zpq
         minerReward,
+        //4 -ghy
+        getLiquidity,
+        //5 -ghy
+        getCandidateNodesInfo,
+        //6 -ghy
+        getSuperNodesInfo,
+        //7 -ghy
+        getAccountInfo,
+        //8 -ssh
+        getLightTokenByAddress,
+        //9 -ssh
+        getSigners,
+        //10 -ssh
+        getSignersAtHash,
+        // 11 -ssh
+        getLightTokenAccountByAccountAddress,
+        //12 -ssh
+        getLightTokenBalanceByAddress,
+        //13 -tx
+        signPaymentTransaction,
         getBalance,
         getStorageAt,
         getCode,
@@ -5575,20 +5649,20 @@ Inb.prototype.isSyncing = function(callback) {
 module.exports = Inb;
 },{"../../utils/config":18,"../../utils/utils":20,"../contract":25,"../filter":29,"../formatters":30,"../iban":33,"../method":36,"../namereg":44,"../property":45,"../syncing":48,"../transfer":49,"./watches":43}],39:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file eth.js
  * @authors:
@@ -5599,19 +5673,19 @@ module.exports = Inb;
 var utils = require('../../utils/utils');
 var Property = require('../property');
 
-var Net = function (web3) {
-    this._requestManager = web3._requestManager;
+var Net = function(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
 
-    properties().forEach(function(p) { 
+    properties().forEach(function(p) {
         p.attachToObject(self);
-        p.setRequestManager(web3._requestManager);
+        p.setRequestManager(web3i._requestManager);
     });
 };
 
-/// @returns an array of objects describing web3.eth api properties
-var properties = function () {
+/// @returns an array of objects describing web3i.inb api properties
+var properties = function() {
     return [
         new Property({
             name: 'listening',
@@ -5626,23 +5700,22 @@ var properties = function () {
 };
 
 module.exports = Net;
-
 },{"../../utils/utils":20,"../property":45}],40:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file eth.js
@@ -5657,8 +5730,8 @@ var Method = require('../method');
 var Property = require('../property');
 var formatters = require('../formatters');
 
-function Personal(web3) {
-    this._requestManager = web3._requestManager;
+function Personal(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
 
@@ -5673,7 +5746,7 @@ function Personal(web3) {
     });
 }
 
-var methods = function () {
+var methods = function() {
     var newAccount = new Method({
         name: 'newAccount',
         call: 'personal_newAccount',
@@ -5683,21 +5756,21 @@ var methods = function () {
 
     var importRawKey = new Method({
         name: 'importRawKey',
-		call: 'personal_importRawKey',
-		params: 2
+        call: 'personal_importRawKey',
+        params: 2
     });
 
     var sign = new Method({
         name: 'sign',
-		call: 'personal_sign',
-		params: 3,
-		inputFormatter: [null, formatters.inputAddressFormatter, null]
+        call: 'personal_sign',
+        params: 3,
+        inputFormatter: [null, formatters.inputAddressFormatter, null]
     });
 
     var ecRecover = new Method({
         name: 'ecRecover',
-		call: 'personal_ecRecover',
-		params: 2
+        call: 'personal_ecRecover',
+        params: 2
     });
 
     var unlockAccount = new Method({
@@ -5732,7 +5805,7 @@ var methods = function () {
     ];
 };
 
-var properties = function () {
+var properties = function() {
     return [
         new Property({
             name: 'listAccounts',
@@ -5743,23 +5816,22 @@ var properties = function () {
 
 
 module.exports = Personal;
-
 },{"../formatters":30,"../method":36,"../property":45}],41:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file shh.js
  * @authors:
@@ -5772,8 +5844,8 @@ var Method = require('../method');
 var Filter = require('../filter');
 var watches = require('./watches');
 
-var Shh = function (web3) {
-    this._requestManager = web3._requestManager;
+var Shh = function(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
 
@@ -5783,11 +5855,11 @@ var Shh = function (web3) {
     });
 };
 
-Shh.prototype.newMessageFilter = function (options, callback, filterCreationErrorCallback) {
+Shh.prototype.newMessageFilter = function(options, callback, filterCreationErrorCallback) {
     return new Filter(options, 'shh', this._requestManager, watches.shh(), null, callback, filterCreationErrorCallback);
 };
 
-var methods = function () {
+var methods = function() {
 
     return [
         new Method({
@@ -5888,31 +5960,29 @@ var methods = function () {
 };
 
 module.exports = Shh;
-
-
 },{"../filter":29,"../method":36,"./watches":43}],42:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file bzz.js
  * @author Alex Beregszaszi <alex@rtfs.hu>
  * @date 2016
  *
- * Reference: https://github.com/ethereum/go-ethereum/blob/swarm/internal/web3ext/web3ext.go#L33
+ * Reference: https://github.com/ethereum/go-ethereum/blob/swarm/internal/web3iext/web3iext.go#L33
  */
 
 "use strict";
@@ -5920,8 +5990,8 @@ module.exports = Shh;
 var Method = require('../method');
 var Property = require('../property');
 
-function Swarm(web3) {
-    this._requestManager = web3._requestManager;
+function Swarm(web3i) {
+    this._requestManager = web3i._requestManager;
 
     var self = this;
 
@@ -5936,7 +6006,7 @@ function Swarm(web3) {
     });
 }
 
-var methods = function () {
+var methods = function() {
     var blockNetworkRead = new Method({
         name: 'blockNetworkRead',
         call: 'bzz_blockNetworkRead',
@@ -6021,7 +6091,7 @@ var methods = function () {
     ];
 };
 
-var properties = function () {
+var properties = function() {
     return [
         new Property({
             name: 'hive',
@@ -6036,23 +6106,22 @@ var properties = function () {
 
 
 module.exports = Swarm;
-
 },{"../method":36,"../property":45}],43:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file watches.js
  * @authors:
@@ -6062,12 +6131,12 @@ module.exports = Swarm;
 
 var Method = require('../method');
 
-/// @returns an array of objects describing web3.eth.filter api methods
-var eth = function () {
-    var newFilterCall = function (args) {
+/// @returns an array of objects describing web3i.eth.filter api methods
+var eth = function() {
+    var newFilterCall = function(args) {
         var type = args[0];
 
-        switch(type) {
+        switch (type) {
             case 'latest':
                 args.shift();
                 this.params = 0;
@@ -6113,8 +6182,8 @@ var eth = function () {
     ];
 };
 
-/// @returns an array of objects describing web3.shh.watch api methods
-var shh = function () {
+/// @returns an array of objects describing web3i.shh.watch api methods
+var shh = function() {
 
     return [
         new Method({
@@ -6144,24 +6213,22 @@ module.exports = {
     eth: eth,
     shh: shh
 };
-
-
 },{"../method":36}],44:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file namereg.js
@@ -6170,7 +6237,7 @@ module.exports = {
  */
 
 var globalRegistrarAbi = require('../contracts/GlobalRegistrar.json');
-var icapRegistrarAbi= require('../contracts/ICAPRegistrar.json');
+var icapRegistrarAbi = require('../contracts/ICAPRegistrar.json');
 
 var globalNameregAddress = '0xc6d9d2cd449a754c494264e1809c50e34d64562b';
 var icapNameregAddress = '0xa1a111bc074c9cfa781f0c38e63bd51c91b8af00';
@@ -6185,24 +6252,22 @@ module.exports = {
         address: icapNameregAddress
     }
 };
-
-
 },{"../contracts/GlobalRegistrar.json":1,"../contracts/ICAPRegistrar.json":2}],45:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file property.js
@@ -6213,7 +6278,7 @@ module.exports = {
 
 var utils = require('../utils/utils');
 
-var Property = function (options) {
+var Property = function(options) {
     this.name = options.name;
     this.getter = options.getter;
     this.setter = options.setter;
@@ -6222,7 +6287,7 @@ var Property = function (options) {
     this.requestManager = null;
 };
 
-Property.prototype.setRequestManager = function (rm) {
+Property.prototype.setRequestManager = function(rm) {
     this.requestManager = rm;
 };
 
@@ -6233,7 +6298,7 @@ Property.prototype.setRequestManager = function (rm) {
  * @param {Array}
  * @return {Array}
  */
-Property.prototype.formatInput = function (arg) {
+Property.prototype.formatInput = function(arg) {
     return this.inputFormatter ? this.inputFormatter(arg) : arg;
 };
 
@@ -6244,7 +6309,7 @@ Property.prototype.formatInput = function (arg) {
  * @param {Object}
  * @return {Object}
  */
-Property.prototype.formatOutput = function (result) {
+Property.prototype.formatOutput = function(result) {
     return this.outputFormatter && result !== null && result !== undefined ? this.outputFormatter(result) : result;
 };
 
@@ -6255,7 +6320,7 @@ Property.prototype.formatOutput = function (result) {
  * @param {Array} arguments
  * @return {Function|Null} callback, if exists
  */
-Property.prototype.extractCallback = function (args) {
+Property.prototype.extractCallback = function(args) {
     if (utils.isFunction(args[args.length - 1])) {
         return args.pop(); // modify the args array!
     }
@@ -6269,7 +6334,7 @@ Property.prototype.extractCallback = function (args) {
  * @param {Object}
  * @param {Function}
  */
-Property.prototype.attachToObject = function (obj) {
+Property.prototype.attachToObject = function(obj) {
     var proto = {
         get: this.buildGet(),
         enumerable: true
@@ -6287,11 +6352,11 @@ Property.prototype.attachToObject = function (obj) {
     obj[asyncGetterName(name)] = this.buildAsyncGet();
 };
 
-var asyncGetterName = function (name) {
+var asyncGetterName = function(name) {
     return 'get' + name.charAt(0).toUpperCase() + name.slice(1);
 };
 
-Property.prototype.buildGet = function () {
+Property.prototype.buildGet = function() {
     var property = this;
     return function get() {
         return property.formatOutput(property.requestManager.send({
@@ -6300,12 +6365,12 @@ Property.prototype.buildGet = function () {
     };
 };
 
-Property.prototype.buildAsyncGet = function () {
+Property.prototype.buildAsyncGet = function() {
     var property = this;
-    var get = function (callback) {
+    var get = function(callback) {
         property.requestManager.sendAsync({
             method: property.getter
-        }, function (err, result) {
+        }, function(err, result) {
             callback(err, property.formatOutput(result));
         });
     };
@@ -6320,7 +6385,7 @@ Property.prototype.buildAsyncGet = function () {
  * @param {...} params
  * @return {Object} jsonrpc request
  */
-Property.prototype.request = function () {
+Property.prototype.request = function() {
     var payload = {
         method: this.getter,
         params: [],
@@ -6331,24 +6396,22 @@ Property.prototype.request = function () {
 };
 
 module.exports = Property;
-
-
 },{"../utils/utils":20}],46:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file requestmanager.js
@@ -6371,7 +6434,7 @@ var errors = require('./errors');
  * Default poll timeout is 1 second
  * Singleton
  */
-var RequestManager = function (provider) {
+var RequestManager = function(provider) {
     this.provider = provider;
     this.polls = {};
     this.timeout = null;
@@ -6384,7 +6447,7 @@ var RequestManager = function (provider) {
  * @param {Object} data
  * @return {Object}
  */
-RequestManager.prototype.send = function (data) {
+RequestManager.prototype.send = function(data) {
     if (!this.provider) {
         console.error(errors.InvalidProvider());
         return null;
@@ -6407,17 +6470,17 @@ RequestManager.prototype.send = function (data) {
  * @param {Object} data
  * @param {Function} callback
  */
-RequestManager.prototype.sendAsync = function (data, callback) {
+RequestManager.prototype.sendAsync = function(data, callback) {
     if (!this.provider) {
         return callback(errors.InvalidProvider());
     }
 
     var payload = Jsonrpc.toPayload(data.method, data.params);
-    this.provider.sendAsync(payload, function (err, result) {
+    this.provider.sendAsync(payload, function(err, result) {
         if (err) {
             return callback(err);
         }
-        
+
         if (!Jsonrpc.isValidResponse(result)) {
             return callback(errors.InvalidResponse(result));
         }
@@ -6433,14 +6496,14 @@ RequestManager.prototype.sendAsync = function (data, callback) {
  * @param {Array} batch data
  * @param {Function} callback
  */
-RequestManager.prototype.sendBatch = function (data, callback) {
+RequestManager.prototype.sendBatch = function(data, callback) {
     if (!this.provider) {
         return callback(errors.InvalidProvider());
     }
 
     var payload = Jsonrpc.toBatchPayload(data);
 
-    this.provider.sendAsync(payload, function (err, results) {
+    this.provider.sendAsync(payload, function(err, results) {
         if (err) {
             return callback(err);
         }
@@ -6450,7 +6513,7 @@ RequestManager.prototype.sendBatch = function (data, callback) {
         }
 
         callback(err, results);
-    }); 
+    });
 };
 
 /**
@@ -6459,7 +6522,7 @@ RequestManager.prototype.sendBatch = function (data, callback) {
  * @method setProvider
  * @param {Object}
  */
-RequestManager.prototype.setProvider = function (p) {
+RequestManager.prototype.setProvider = function(p) {
     this.provider = p;
 };
 
@@ -6474,8 +6537,8 @@ RequestManager.prototype.setProvider = function (p) {
  *
  * @todo cleanup number of params
  */
-RequestManager.prototype.startPolling = function (data, pollId, callback, uninstall) {
-    this.polls[pollId] = {data: data, id: pollId, callback: callback, uninstall: uninstall};
+RequestManager.prototype.startPolling = function(data, pollId, callback, uninstall) {
+    this.polls[pollId] = { data: data, id: pollId, callback: callback, uninstall: uninstall };
 
 
     // start polling
@@ -6490,11 +6553,11 @@ RequestManager.prototype.startPolling = function (data, pollId, callback, uninst
  * @method stopPolling
  * @param {Number} pollId
  */
-RequestManager.prototype.stopPolling = function (pollId) {
+RequestManager.prototype.stopPolling = function(pollId) {
     delete this.polls[pollId];
 
     // stop polling
-    if(Object.keys(this.polls).length === 0 && this.timeout) {
+    if (Object.keys(this.polls).length === 0 && this.timeout) {
         clearTimeout(this.timeout);
         this.timeout = null;
     }
@@ -6505,20 +6568,20 @@ RequestManager.prototype.stopPolling = function (pollId) {
  *
  * @method reset
  */
-RequestManager.prototype.reset = function (keepIsSyncing) {
+RequestManager.prototype.reset = function(keepIsSyncing) {
     /*jshint maxcomplexity:5 */
 
     for (var key in this.polls) {
         // remove all polls, except sync polls,
         // they need to be removed manually by calling syncing.stopWatching()
-        if(!keepIsSyncing || key.indexOf('syncPoll_') === -1) {
+        if (!keepIsSyncing || key.indexOf('syncPoll_') === -1) {
             this.polls[key].uninstall();
             delete this.polls[key];
         }
     }
 
     // stop polling
-    if(Object.keys(this.polls).length === 0 && this.timeout) {
+    if (Object.keys(this.polls).length === 0 && this.timeout) {
         clearTimeout(this.timeout);
         this.timeout = null;
     }
@@ -6529,7 +6592,7 @@ RequestManager.prototype.reset = function (keepIsSyncing) {
  *
  * @method poll
  */
-RequestManager.prototype.poll = function () {
+RequestManager.prototype.poll = function() {
     /*jshint maxcomplexity: 6 */
     this.timeout = setTimeout(this.poll.bind(this), c.ETH_POLLING_TIMEOUT);
 
@@ -6554,16 +6617,16 @@ RequestManager.prototype.poll = function () {
     }
 
     var payload = Jsonrpc.toBatchPayload(pollsData);
-    
+
     // map the request id to they poll id
     var pollsIdMap = {};
-    payload.forEach(function(load, index){
+    payload.forEach(function(load, index) {
         pollsIdMap[load.id] = pollsIds[index];
     });
 
 
     var self = this;
-    this.provider.sendAsync(payload, function (error, results) {
+    this.provider.sendAsync(payload, function(error, results) {
 
 
         // TODO: console log?
@@ -6574,7 +6637,7 @@ RequestManager.prototype.poll = function () {
         if (!utils.isArray(results)) {
             throw errors.InvalidResponse(results);
         }
-        results.map(function (result) {
+        results.map(function(result) {
             var id = pollsIdMap[result.id];
 
             // make sure the filter is still installed after arrival of the request
@@ -6583,23 +6646,21 @@ RequestManager.prototype.poll = function () {
                 return result;
             } else
                 return false;
-        }).filter(function (result) {
-            return !!result; 
-        }).filter(function (result) {
+        }).filter(function(result) {
+            return !!result;
+        }).filter(function(result) {
             var valid = Jsonrpc.isValidResponse(result);
             if (!valid) {
                 result.callback(errors.InvalidResponse(result));
             }
             return valid;
-        }).forEach(function (result) {
+        }).forEach(function(result) {
             result.callback(null, result.result);
         });
     });
 };
 
 module.exports = RequestManager;
-
-
 },{"../utils/config":18,"../utils/utils":20,"./errors":26,"./jsonrpc":35}],47:[function(require,module,exports){
 
 
@@ -6613,20 +6674,20 @@ module.exports = Settings;
 
 },{}],48:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file syncing.js
  * @authors:
@@ -6647,28 +6708,28 @@ Adds the callback and sets up the methods, to iterate over the results.
 */
 var pollSyncing = function(self) {
 
-    var onMessage = function (error, sync) {
+    var onMessage = function(error, sync) {
         if (error) {
-            return self.callbacks.forEach(function (callback) {
+            return self.callbacks.forEach(function(callback) {
                 callback(error);
             });
         }
 
-        if(utils.isObject(sync) && sync.startingBlock)
+        if (utils.isObject(sync) && sync.startingBlock)
             sync = formatters.outputSyncingFormatter(sync);
 
-        self.callbacks.forEach(function (callback) {
+        self.callbacks.forEach(function(callback) {
             if (self.lastSyncState !== sync) {
-                
+
                 // call the callback with true first so the app can stop anything, before receiving the sync data
-                if(!self.lastSyncState && utils.isObject(sync))
+                if (!self.lastSyncState && utils.isObject(sync))
                     callback(null, true);
-                
+
                 // call on the next CPU cycle, so the actions of the sync stop can be processes first
                 setTimeout(function() {
                     callback(null, sync);
                 }, 0);
-                
+
                 self.lastSyncState = sync;
             }
         });
@@ -6681,9 +6742,9 @@ var pollSyncing = function(self) {
 
 };
 
-var IsSyncing = function (requestManager, callback) {
+var IsSyncing = function(requestManager, callback) {
     this.requestManager = requestManager;
-    this.pollId = 'syncPoll_'+ count++;
+    this.pollId = 'syncPoll_' + count++;
     this.callbacks = [];
     this.addCallback(callback);
     this.lastSyncState = false;
@@ -6692,36 +6753,34 @@ var IsSyncing = function (requestManager, callback) {
     return this;
 };
 
-IsSyncing.prototype.addCallback = function (callback) {
-    if(callback)
+IsSyncing.prototype.addCallback = function(callback) {
+    if (callback)
         this.callbacks.push(callback);
     return this;
 };
 
-IsSyncing.prototype.stopWatching = function () {
+IsSyncing.prototype.stopWatching = function() {
     this.requestManager.stopPolling(this.pollId);
     this.callbacks = [];
 };
 
 module.exports = IsSyncing;
-
-
 },{"../utils/utils":20,"./formatters":30}],49:[function(require,module,exports){
 /*
-    This file is part of web3.js.
+    This file is part of web3i.js.
 
-    web3.js is free software: you can redistribute it and/or modify
+    web3i.js is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    web3.js is distributed in the hope that it will be useful,
+    web3i.js is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
+    along with web3i.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
  * @file transfer.js
@@ -6741,8 +6800,8 @@ var exchangeAbi = require('../contracts/SmartExchange.json');
  * @param {Value} value to be tranfered
  * @param {Function} callback, callback
  */
-var transfer = function (eth, from, to, value, callback) {
-    var iban = new Iban(to); 
+var transfer = function(eth, from, to, value, callback) {
+    var iban = new Iban(to);
     if (!iban.isValid()) {
         throw new Error('invalid iban address');
     }
@@ -6750,16 +6809,16 @@ var transfer = function (eth, from, to, value, callback) {
     if (iban.isDirect()) {
         return transferToAddress(eth, from, iban.address(), value, callback);
     }
-    
+
     if (!callback) {
         var address = eth.icapNamereg().addr(iban.institution());
         return deposit(eth, from, address, value, iban.client());
     }
 
-    eth.icapNamereg().addr(iban.institution(), function (err, address) {
+    eth.icapNamereg().addr(iban.institution(), function(err, address) {
         return deposit(eth, from, address, value, iban.client(), callback);
     });
-    
+
 };
 
 /**
@@ -6771,7 +6830,7 @@ var transfer = function (eth, from, to, value, callback) {
  * @param {Value} value to be tranfered
  * @param {Function} callback, callback
  */
-var transferToAddress = function (eth, from, to, value, callback) {
+var transferToAddress = function(eth, from, to, value, callback) {
     return eth.sendTransaction({
         address: to,
         from: from,
@@ -6789,7 +6848,7 @@ var transferToAddress = function (eth, from, to, value, callback) {
  * @param {String} client unique identifier
  * @param {Function} callback, callback
  */
-var deposit = function (eth, from, to, value, client, callback) {
+var deposit = function(eth, from, to, value, client, callback) {
     var abi = exchangeAbi;
     return eth.contract(abi).at(to).deposit(client, {
         from: from,
@@ -6798,8 +6857,6 @@ var deposit = function (eth, from, to, value, client, callback) {
 };
 
 module.exports = transfer;
-
-
 },{"../contracts/SmartExchange.json":3,"./iban":33}],50:[function(require,module,exports){
 
 },{}],51:[function(require,module,exports){
@@ -16344,7 +16401,7 @@ module.exports = XMLHttpRequest;
 })(this);
 
 },{"crypto":50}],"web3":[function(require,module,exports){
-var Web3I = require('./lib/web3');
+var Web3I = require('./lib/web3i');
 
 // dont override global variable
 if (typeof window !== 'undefined' && typeof window.Web3I === 'undefined') {
@@ -16352,5 +16409,5 @@ if (typeof window !== 'undefined' && typeof window.Web3I === 'undefined') {
 }
 
 module.exports = Web3I;
-},{"./lib/web3":22}]},{},["web3"])
+},{"./lib/web3i":22}]},{},["web3"])
 //# sourceMappingURL=web3i.js.map

@@ -1,5 +1,5 @@
-var Web3 = require('../index');
-var web3 = new Web3();
+var Web3i = require('../index');
+var web3i = new Web3i();
 var BigNumber = require('bignumber.js');
 var testMethod = require('./helpers/test.method.js');
 
@@ -16,13 +16,13 @@ var blockResult = {
     "stateRoot": "0xd5855eb08b3387c0af375e9cdb6acfc05eb8f519e419b874b6ff2ffda7ed1dff",
     "miner": "0x4e65fda2159562a496f9f3522f89122a3088497a",
     "difficulty": "0x027f07",
-    "totalDifficulty":  "0x027f07",
-    "size":  "0x027f07",
+    "totalDifficulty": "0x027f07",
+    "size": "0x027f07",
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "gasLimit": "0x9f759",
     "gasUsed": "0x9f759",
     "timestamp": "0x54e34e8e",
-    "transactions": ['0x460cfb8472af2c5fd05b5a2','0x460cfb8472af2c5fd05b5a2'],
+    "transactions": ['0x460cfb8472af2c5fd05b5a2', '0x460cfb8472af2c5fd05b5a2'],
     "uncles": ["0x460cfb8472af2c5fd05b5a2", "0xd5460cfb8472af2c5fd05b5a2"]
 };
 var formattedBlockResult = {
@@ -36,13 +36,13 @@ var formattedBlockResult = {
     "stateRoot": "0xd5855eb08b3387c0af375e9cdb6acfc05eb8f519e419b874b6ff2ffda7ed1dff",
     "miner": "0x4e65fda2159562a496f9f3522f89122a3088497a",
     "difficulty": new BigNumber(163591),
-    "totalDifficulty":  new BigNumber(163591),
-    "size":  163591,
+    "totalDifficulty": new BigNumber(163591),
+    "size": 163591,
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "gasLimit": 653145,
     "gasUsed": 653145,
     "timestamp": 1424182926,
-    "transactions": ['0x460cfb8472af2c5fd05b5a2','0x460cfb8472af2c5fd05b5a2'],
+    "transactions": ['0x460cfb8472af2c5fd05b5a2', '0x460cfb8472af2c5fd05b5a2'],
     "uncles": ["0x460cfb8472af2c5fd05b5a2", "0xd5460cfb8472af2c5fd05b5a2"]
 };
 var blockResultWithTx = {
@@ -56,25 +56,25 @@ var blockResultWithTx = {
     "stateRoot": "0xd5855eb08b3387c0af375e9cdb6acfc05eb8f519e419b874b6ff2ffda7ed1dff",
     "miner": "0x4e65fda2159562a496f9f3522f89122a3088497a",
     "difficulty": "0x027f07",
-    "totalDifficulty":  "0x027f07",
-    "size":  "0x027f07",
+    "totalDifficulty": "0x027f07",
+    "size": "0x027f07",
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "gasLimit": "0x9f759",
     "gasUsed": "0x9f759",
     "timestamp": "0x54e34e8e",
     "transactions": [{
         "status": "mined",
-        "hash":"0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
-        "nonce":"0x2",
+        "hash": "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
+        "nonce": "0x2",
         "blockHash": "0x6fd9e2a26ab",
         "blockNumber": "0x15df",
-        "transactionIndex":  "0x1",
-        "from":"0x407d73d8a49eeb85d32cf465507dd71d507100c1",
-        "to":"0x85h43d8a49eeb85d32cf465507dd71d507100c1",
-        "value":"0x7f110",
+        "transactionIndex": "0x1",
+        "from": "0x407d73d8a49eeb85d32cf465507dd71d507100c1",
+        "to": "0x85h43d8a49eeb85d32cf465507dd71d507100c1",
+        "value": "0x7f110",
         "gas": "0x7f110",
-        "gasPrice":"0x09184e72a000",
-        "input":"0x603880600c6000396000f30060",
+        "gasPrice": "0x09184e72a000",
+        "input": "0x603880600c6000396000f30060",
     }],
     "uncles": ["0x460cfb8472af2c5fd05b5a2", "0xd5460cfb8472af2c5fd05b5a2"]
 };
@@ -89,25 +89,25 @@ var formattedBlockResultWithTx = {
     "stateRoot": "0xd5855eb08b3387c0af375e9cdb6acfc05eb8f519e419b874b6ff2ffda7ed1dff",
     "miner": "0x4e65fda2159562a496f9f3522f89122a3088497a",
     "difficulty": new BigNumber(163591),
-    "totalDifficulty":  new BigNumber(163591),
-    "size":  163591,
+    "totalDifficulty": new BigNumber(163591),
+    "size": 163591,
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "gasLimit": 653145,
     "gasUsed": 653145,
     "timestamp": 1424182926,
     "transactions": [{
         "status": "mined",
-        "hash":"0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
+        "hash": "0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
         "nonce": 2,
         "blockHash": "0x6fd9e2a26ab",
         "blockNumber": 5599,
-        "transactionIndex":  1,
-        "from":"0x407d73d8a49eeb85d32cf465507dd71d507100c1",
-        "to":"0x85h43d8a49eeb85d32cf465507dd71d507100c1",
+        "transactionIndex": 1,
+        "from": "0x407d73d8a49eeb85d32cf465507dd71d507100c1",
+        "to": "0x85h43d8a49eeb85d32cf465507dd71d507100c1",
         "value": new BigNumber(520464),
         "gas": 520464,
         "gasPrice": new BigNumber(10000000000000),
-        "input":"0x603880600c6000396000f30060",
+        "input": "0x603880600c6000396000f30060",
     }],
     "uncles": ["0x460cfb8472af2c5fd05b5a2", "0xd5460cfb8472af2c5fd05b5a2"]
 };
@@ -117,20 +117,19 @@ var tests = [{
     formattedArgs: ['0x47d33b27bb249a2dbab4c0612bf9caf4c1950855', false],
     result: blockResult,
     formattedResult: formattedBlockResult,
-    call: 'eth_'+ method + 'ByHash'
-},{
+    call: 'eth_' + method + 'ByHash'
+}, {
     args: [436],
     formattedArgs: ['0x1b4', false],
     result: blockResult,
     formattedResult: formattedBlockResult,
-    call: 'eth_'+ method + 'ByNumber'
-},{
+    call: 'eth_' + method + 'ByNumber'
+}, {
     args: [436, true],
     formattedArgs: ['0x1b4', true],
     result: blockResultWithTx,
     formattedResult: formattedBlockResultWithTx,
-    call: 'eth_'+ method + 'ByNumber'
+    call: 'eth_' + method + 'ByNumber'
 }];
 
 testMethod.runTests('eth', method, tests);
-

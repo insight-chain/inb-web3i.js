@@ -1,8 +1,8 @@
 var chai = require('chai');
 var assert = chai.assert;
 var BigNumber = require('bignumber.js');
-var SolidityEvent = require('../lib/web3/event');
-var Web3 = require('../index');
+var SolidityEvent = require('../lib/web3i/event');
+var Web3i = require('../index');
 
 
 var name = 'event1';
@@ -89,11 +89,11 @@ var tests = [{
         address: address,
         blockHash: '0x1234567890',
         blockNumber: '0x1',
-        data: '0x' + 
-            '0000000000000000000000000000000000000000000000000000000000000001' + 
+        data: '0x' +
+            '0000000000000000000000000000000000000000000000000000000000000001' +
             '0000000000000000000000000000000000000000000000000000000000000004',
         topics: [
-            address, 
+            address,
             '0x000000000000000000000000000000000000000000000000000000000000000a',
             '0x0000000000000000000000000000000000000000000000000000000000000010'
         ]
@@ -142,8 +142,8 @@ var tests = [{
         address: address,
         blockHash: '0x1234567890',
         blockNumber: '0x1',
-        data: '0x' + 
-            '0000000000000000000000000000000000000000000000000000000000000001' + 
+        data: '0x' +
+            '0000000000000000000000000000000000000000000000000000000000000001' +
             '0000000000000000000000000000000000000000000000000000000000000004',
         topics: [
             '0x000000000000000000000000000000000000000000000000000000000000000a',
@@ -167,12 +167,12 @@ var tests = [{
     }
 }];
 
-describe('lib/web3/event', function () {
-    describe('decode', function () {
-        tests.forEach(function (test, index) {
-            it('test no: ' + index, function () {
-                var web3 = new Web3();
-                var event = new SolidityEvent(web3, test.abi, address);
+describe('lib/web3i/event', function() {
+    describe('decode', function() {
+        tests.forEach(function(test, index) {
+            it('test no: ' + index, function() {
+                var web3i = new Web3i();
+                var event = new SolidityEvent(web3i, test.abi, address);
 
                 var result = event.decode(test.data);
                 assert.deepEqual(result, test.expected);
@@ -180,4 +180,3 @@ describe('lib/web3/event', function () {
         });
     });
 });
-

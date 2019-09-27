@@ -1,11 +1,11 @@
 var assert = require('assert');
-var formatters = require('../lib/web3/formatters.js');
+var formatters = require('../lib/web3i/formatters.js');
 var BigNumber = require('bignumber.js');
 
-describe('formatters', function () {
-    describe('outputTransactionFormatter', function () {
-        it('should return the correct value', function () {
-            
+describe('formatters', function() {
+    describe('outputTransactionFormatter', function() {
+        it('should return the correct value', function() {
+
             assert.deepEqual(formatters.outputTransactionFormatter({
                 input: '0x3454645634534',
                 from: '0x00000',
@@ -31,8 +31,8 @@ describe('formatters', function () {
             });
         });
 
-        it('should return the correct value, when null values are present', function () {
-            
+        it('should return the correct value, when null values are present', function() {
+
             assert.deepEqual(formatters.outputTransactionFormatter({
                 input: '0x3454645634534',
                 from: '0x00000',

@@ -1,5 +1,5 @@
 var chai = require('chai');
-var Web3 = require('../index');
+var web3i = require('../index');
 var assert = chai.assert;
 var FakeHttpProvider = require('./helpers/FakeHttpProvider');
 
@@ -39,13 +39,13 @@ var tests = [{
     call: 'eth_syncing'
 }];
 
-describe('eth', function () {
-    describe(method, function () {
-        tests.forEach(function (test, index) {
-            it('property test: ' + index, function (done) {
+describe('eth', function() {
+    describe(method, function() {
+        tests.forEach(function(test, index) {
+            it('property test: ' + index, function(done) {
                 // given
                 var provider = new FakeHttpProvider();
-                var web3 = new Web3(provider);
+                var web3i = new web3i(provider);
                 provider.injectBatchResults(test.result);
                 provider.injectValidation(function(payload) {
                     assert.equal(payload[0].jsonrpc, '2.0', 'failed');
@@ -59,8 +59,8 @@ describe('eth', function () {
 
 
                 // call
-                var syncing = web3.eth[method](function(e, res){
-                    if(count === 1) {
+                var syncing = web3i.eth[method](function(e, res) {
+                    if (count === 1) {
                         assert.isTrue(res);
                         count++;
                     } else {
@@ -74,4 +74,3 @@ describe('eth', function () {
         });
     });
 });
-

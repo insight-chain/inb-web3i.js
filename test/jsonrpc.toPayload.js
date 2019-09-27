@@ -1,10 +1,10 @@
 var chai = require('chai');
 var assert = chai.assert;
-var Jsonrpc = require('../lib/web3/jsonrpc');
+var Jsonrpc = require('../lib/web3i/jsonrpc');
 
-describe('jsonrpc', function () {
-    describe('toPayload', function () {
-        it('should create basic payload', function () {
+describe('jsonrpc', function() {
+    describe('toPayload', function() {
+        it('should create basic payload', function() {
 
             // given
             var method = 'helloworld';
@@ -20,7 +20,7 @@ describe('jsonrpc', function () {
             assert.equal(typeof payload.id, 'number');
         });
 
-        it('should create payload with params', function () {
+        it('should create payload with params', function() {
 
             // given
             var method = 'helloworld1';

@@ -1,5 +1,5 @@
 var chai = require('chai');
-var web3 = require('../index');
+var web3i = require('../index');
 var method = 'getBlockUncleCount';
 var testMethod = require('./helpers/test.method.js');
 
@@ -10,13 +10,13 @@ var tests = [{
     result: '0xb',
     formattedResult: 11,
     call: 'eth_getUncleCountByBlockHash'
-},{
+}, {
     args: [436],
     formattedArgs: ['0x1b4'],
     result: '0xb',
     formattedResult: 11,
     call: 'eth_getUncleCountByBlockNumber'
-},{
+}, {
     args: ['pending'],
     formattedArgs: ['pending'],
     result: '0xb',

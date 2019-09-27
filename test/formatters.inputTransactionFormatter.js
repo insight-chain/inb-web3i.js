@@ -1,6 +1,6 @@
 var chai = require('chai');
 var assert = chai.assert;
-var formatters = require('../lib/web3/formatters.js');
+var formatters = require('../lib/web3i/formatters.js');
 var BigNumber = require('bignumber.js');
 
 var tests = [{
@@ -22,7 +22,7 @@ var tests = [{
         gas: '0x3e8',
         gasPrice: '0x3e8'
     }
-},{
+}, {
     input: {
         data: '0x34234bf23bf4234',
         value: new BigNumber(100),
@@ -35,7 +35,7 @@ var tests = [{
         from: '0x00c5496aee77c1ba1f0854206a26dda82a81d6d8',
         to: '0x00c5496aee77c1ba1f0854206a26dda82a81d6d8',
     }
-},{
+}, {
     input: {
         data: '0x34234bf23bf4234',
         value: new BigNumber(100),
@@ -86,10 +86,10 @@ var tests = [{
     }
 }];
 
-describe('formatters', function () {
-    describe('inputTransactionFormatter', function () {
-        tests.forEach(function(test){
-            it('should return the correct value', function () {
+describe('formatters', function() {
+    describe('inputTransactionFormatter', function() {
+        tests.forEach(function(test) {
+            it('should return the correct value', function() {
                 assert.deepEqual(formatters.inputTransactionFormatter(test.input), test.result);
             });
         });

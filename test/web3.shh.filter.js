@@ -1,6 +1,6 @@
 var chai = require('chai');
-var Web3 = require('../index');
-var web3 = new Web3();
+var web3i = require('../index');
+var web3i = new web3i();
 var assert = chai.assert;
 var FakeHttpProvider = require('./helpers/FakeHttpProvider');
 
@@ -26,27 +26,26 @@ var tests = [{
     call: 'shh_newMessageFilter'
 }];
 
-describe('shh', function () {
-    describe(method, function () {
-        tests.forEach(function (test, index) {
-            it('property test: ' + index, function () {
+describe('shh', function() {
+    describe(method, function() {
+        tests.forEach(function(test, index) {
+            it('property test: ' + index, function() {
 
                 // given
                 var provider = new FakeHttpProvider();
-                web3.setProvider(provider);
-                web3.reset();
+                web3i.setProvider(provider);
+                web3i.reset();
                 provider.injectResult(test.result);
-                provider.injectValidation(function (payload) {
+                provider.injectValidation(function(payload) {
                     assert.equal(payload.jsonrpc, '2.0');
                     assert.equal(payload.method, test.call);
                     assert.deepEqual(payload.params, test.formattedArgs);
                 });
 
                 // call
-                web3.shh[method].apply(web3.shh, test.args);
+                web3i.shh[method].apply(web3i.shh, test.args);
 
             });
         });
     });
 });
-

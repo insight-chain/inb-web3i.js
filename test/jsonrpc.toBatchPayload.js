@@ -1,9 +1,9 @@
 var assert = require('assert');
-var Jsonrpc = require('../lib/web3/jsonrpc');
+var Jsonrpc = require('../lib/web3i/jsonrpc');
 
-describe('jsonrpc', function () {
-    describe('toBatchPayload', function () {
-        it('should create basic batch payload', function () {
+describe('jsonrpc', function() {
+    describe('toBatchPayload', function() {
+        it('should create basic batch payload', function() {
 
             // given
             var messages = [{
@@ -31,7 +31,7 @@ describe('jsonrpc', function () {
             assert.equal(payload[0].id + 1, payload[1].id);
         });
 
-        it('should create batch payload for empty input array', function () {
+        it('should create batch payload for empty input array', function() {
 
             // given
             var messages = [];

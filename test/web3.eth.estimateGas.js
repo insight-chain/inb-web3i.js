@@ -1,4 +1,4 @@
-var web3 = require('../index');
+var web3i = require('../index');
 var testMethod = require('./helpers/test.method.js');
 
 var method = 'estimateGas';
@@ -18,8 +18,7 @@ var tests = [{
     }],
     result: '0x31981',
     formattedResult: 203137,
-    call: 'eth_'+ method
+    call: 'eth_' + method
 }];
 
 testMethod.runTests('eth', method, tests);
-

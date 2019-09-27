@@ -1,11 +1,11 @@
 var chai = require('chai');
 var assert = chai.assert;
-var Jsonrpc = require('../lib/web3/jsonrpc');
+var Jsonrpc = require('../lib/web3i/jsonrpc');
 
-describe('lib/web3/jsonrpc', function () {
-    describe('id', function () {
-        it('should increment the id', function () {
-            
+describe('lib/web3i/jsonrpc', function() {
+    describe('id', function() {
+        it('should increment the id', function() {
+
             // given
             var method = 'm';
 
@@ -14,8 +14,7 @@ describe('lib/web3/jsonrpc', function () {
             var p2 = Jsonrpc.toPayload(method);
 
             // then
-            assert.equal(p2.id, p1.id + 1); 
+            assert.equal(p2.id, p1.id + 1);
         });
     });
 });
-

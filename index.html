@@ -10,7 +10,28 @@
 </head>
 
 <body>
-
+    <!--
+        链上交易类型判断：
+            Ordinary                     //1 - 转账
+            Mortgage                     //2 - 抵押
+            Regular                      //3 - 锁仓
+            Redeem                       //4 - 赎回
+            Vote                         //5 - 投票
+            Reset                        //6 - 资源重置
+            Receive                      //7 - 赎回领取
+            ReceiveLockedAward           //8 - 领取锁仓奖励
+            ReceiveVoteAward             //9 - 领取投票奖励
+            UpdateNodeInformation        //10 - 更新节点信息
+            SpecilaTx           //11 - 特殊交易
+            Contract            //12 - 创建合约
+            IssueLightToken     //13 - 发型token
+            TransferLightToken  //14 - token转帐
+            InsteadMortgage     //15 - 代他人抵押 
+         Inb.sendTranasaction 方法中添加的 txType :
+            inb.sendTransaction({from:"0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2",value:2000000000,txType:2})
+            inb.sendTransaction({from:"0x95a991554b190791912612e50ce525b470c18b539a",value:1000000000000,"data":web3.toHex("days:155520000"),"txType":3})
+            inb.sendTransaction({from:"0x95a991554b190791912612e50ce525b470c18b539a",to:"0x95a991554b190791912612e50Ce525b470c18B539A",value:20000000000,"data":web3.toHex("days:46656000"),"txType":15})
+ -->
 </body>
 
 </html>
@@ -25,55 +46,57 @@
     console.log(version);
 
     web3i.inb.getAccounts(function(error, data) {
-        console.log(data)
+        // console.log(data)
     })
 
 
     //解锁账户
-    var lockAccount = "0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2"
+    var lockAccount = "0x954204e369e35950a64b11e717429903b9126bdd"
     web3i.personal.unlockAccount(lockAccount, '1', (err, data) => {
-            if (err) {
-                console.log(err)
-            } else {
-                // console.log(data)
-            }
-        })
-        /* 抵押方法 */
-    web3i.inb.sendTransaction({
-            from: "0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2",
-            value: '2000000000000000000',
-            txType: 2
-        }, (err, data) => {
             if (err) {
                 console.log(err)
             } else {
                 console.log(data)
             }
         })
+        /*抵押方法 */
+        //将inb 单位转换成 wei
+        // var valueToWei = web3i.toWei('1', 'inb')
+        // web3i.inb.sendTransaction({
+        //         from: "0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2",
+        //         value: valueToWei,
+        //         txType: 2
+        //     }, (err, data) => {
+        //         if (err) {
+        //             console.log(err)
+        //         } else {
+        //             console.log(data)
+        //         }
+        //     })
         //查看抵押是否成功
-    web3i.inb.getTransaction('0x58f2319e467a66d14ccb74d402813ade8c2ea4f51e9bf07ce04ebb3e1b08384c', (err, data) => {
-            if (err) {
-                console.log(err)
-            } else {
-                //console.log(data)
-            }
-        })
+        // web3i.inb.getTransaction('0xee49c5ecce189977e862d79e07849fc2265eb41f0e2296e3c3c7bf750fccece1', (err, data) => {
+        //         if (err) {
+        //             console.log(err)
+        //         } else {
+        //             // console.log(data)
+        //         }
+        //     })
         /* 赎回 */
-    web3i.inb.sendTransaction({
-        from: '0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2',
-        value: '30000000000000000',
-        txType: 4
-    }, (err, data) => {
-        console.log(data)
-            //0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137
-    })
-    web3i.inb.getTransaction('0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137', (err, data) => {
-            if (err) {
-                console.log(err)
-            } else {
-                // console.log(data)
-            }
-        })
+        // web3i.inb.sendTransaction({
+        //     from: '0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2',
+        //     value: '3000',
+        //     txType: 4
+        // }, (err, data) => {
+        //     //console.log(data)
+        //     //0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137
+        // })
+        // web3i.inb.getTransaction('0xfc21b45249ef8bd37762ed18c5be6ea36bdef37f1ad5363a0bc5175d425f8137', (err, data) => {
+        //         if (err) {
+        //             console.log(err)
+        //         } else {
+        //             // console.log(data)
+        //         }
+        //     })
         /*
          **测试链上 web3.js 新加的方法
          */
@@ -81,32 +104,128 @@
     // web3.inb.getBalance('0x95efaf722e1e0e06c6faeb773dc5869b977c6b9fb2', (err, data) => {
     //     console.log(data)
     // })
-    web3i.inb.getRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
-        if (err) {
-            console.log(err)
-        } else {
-            console.log(data)
-                //BigNumber {s: 1, e: 0, c: Array(1)}
-        }
+    // web3i.inb.getRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
+    //     if (err) {
+    //         console.log(err)
+    //     } else {
+    //         //console.log(data)
+    //         //BigNumber {s: 1, e: 0, c: Array(1)}
+    //     }
+    // })
+
+    // web3i.inb.getUsedRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
+    //     if (err) {
+    //         console.log(err)
+    //     } else {
+    //         // console.log(data)
+    //     }
+    // })
+    // web3i.inb.getMortgage("0x95f6d9df417ae26644c35d1527f3953e292af3b8bc", (err, data) => {
+    //         // console.log(data)
+    //     })
+    /*    
+       链上 .go 文件中的方法(要在 eth.js 中定义)
+       */
+    web3i.inb.minerReward((err, data) => {
+        //console.log(data)
     })
 
-    web3i.inb.getUsedRes('0x95f6d9df417ae26644c35d1527f3953e292af3b8bc', (err, data) => {
-        if (err) {
-            console.log(err)
-        } else {
-            console.log(data)
-        }
+    //提供 Inb 单位 10的5次方
+    var fromValue = web3i.fromWei('10000000', 'inb');
+    //console.log(fromValue) //100
+
+    var toValue = web3i.toWei('66', 'inb');
+    // console.log(toValue) // 6600000
+    //发送一个签名的交易(利用私钥进行签名)；
+    //使用 ethereumjs-tx 
+    //web3i.inb.sendRawTransaction()
+
+    /* 
+    ** 1.web3i 中添加ghy的方法 
+    *       inb_GetLiquidity参数无，返回string
+    *       inb_GetCandidateNodesInfo参数无
+            inb_GetSuperNodesInfo参数无
+            inb_getAccountInfo参数：地址
+    ** 2. 添加 ssh 的方法
+            1.GetSigners(number uint64)
+            2.GetSignersAtHash(hash common.Hash)
+            3.GetLightTokenByAddress(address common.Address)
+            4.GetLightTokenAccountByAccountAddress(address common.Address)
+            5.GetLightTokenBalanceByAddress(accountAddress common.Address, lightTokenAddress common.Address)
+        3. 添加 tx 的方法
+            signPaymentTransaction(hash)
+    *
+    */
+    //1-ghy
+    web3i.inb.getLiquidity((err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log('getLiquidity' + ':' + data)
+            }
+        })
+        //2-ghy
+    web3i.inb.getCandidateNodesInfo((err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
+        })
+        //3-ghy
+    web3i.inb.getSuperNodesInfo((err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
+        })
+        //4-ghy
+    web3i.inb.getAccountInfo('0x95a9e3782812e59837169ad2dbba8e593ff17986', (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
+        })
+        //6 -ssh
+    web3i.inb.getSigners(12, (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log("getSigners-" + data)
+            }
+        })
+        //7 -ssh
+    web3i.inb.getBlock(1, (err, data) => {
+        //console.log(data)
     })
-    web3i.inb.getMortgage("0x95f6d9df417ae26644c35d1527f3953e292af3b8bc", (err, data) => {
-            console.log(data)
+    web3i.inb.getSignersAtHash('0x31aafdd067a36a38bb7cac38c74e110e40cdfbebe0b4894ba37a75ddec3aaf28', (err, data) => {
+            console.log('getSignersAtHash-' + data)
         })
-        /*    
-           链上 .go 文件中的方法(要在 eth.js 中定义)
-           */
-    web3i.inb.minerReward((err, data) => {
-            console.log(data)
+        //5-ssh params:tokenAddress
+    web3i.inb.getLightTokenByAddress('0x95ce1e4102b15773d3e4f18e3d9d0d167b489cb8', (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
         })
-        //发送一个签名的交易(利用私钥进行签名)；
-        //使用 ethereumjs-tx 
-        //web3i.inb.sendRawTransaction()
+        //8 --ssh params:account address
+    web3i.inb.getLightTokenAccountByAccountAddress('0x954204e369e35950a64b11e717429903b9126bdd', (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
+        })
+        //9 --ssh params:accountAddress，tokenAddress
+    web3i.inb.getLightTokenBalanceByAddress('0x954204e369e35950a64b11e717429903b9126bdd', '0x95ce1e4102b15773d3e4f18e3d9d0d167b489cb8', (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data)
+            }
+        })
+        //10 --tx
 </script>

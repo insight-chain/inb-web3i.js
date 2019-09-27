@@ -1,5 +1,5 @@
 var chai = require('chai');
-var web3 = require('../index');
+var web3i = require('../index');
 var testMethod = require('./helpers/test.method.js');
 
 var method = 'getBlockTransactionCount';
@@ -11,13 +11,13 @@ var tests = [{
     result: '0xb',
     formattedResult: 11,
     call: 'eth_getBlockTransactionCountByHash'
-},{
+}, {
     args: [436],
     formattedArgs: ['0x1b4'],
     result: '0xb',
     formattedResult: 11,
     call: 'eth_getBlockTransactionCountByNumber'
-},{
+}, {
     args: ['pending'],
     formattedArgs: ['pending'],
     result: '0xb',
@@ -26,4 +26,3 @@ var tests = [{
 }];
 
 testMethod.runTests('eth', method, tests);
-

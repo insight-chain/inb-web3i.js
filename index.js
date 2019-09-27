@@ -1,4 +1,4 @@
-var Web3I = require('./lib/web3');
+var Web3I = require('./lib/web3i');
 
 // dont override global variable
 if (typeof window !== 'undefined' && typeof window.Web3I === 'undefined') {
