@@ -27,7 +27,10 @@ You need to run a local Ethereum node to use this library.
 
 ## Installation
 
-### Node.js
+
+### Javascript
+<script src="./dist/web3i.js"></script>
+<!-- ### Node.js
 
 ```bash
 npm install web3i
@@ -43,7 +46,7 @@ yarn add web3i
 
 ```bash
 meteor add ethereum:web3i
-```
+``` -->
 
 ### As Browser module
 Bower
