@@ -87,8 +87,8 @@ web3i.setProvider(new web3i.providers.HttpProvider('http://host.url', 0, BasicAu
 There you go, now you can use it:
 
 ```js
-var coinbase = web3i.eth.coinbase;
-var balance = web3i.eth.getBalance(coinbase);
+var coinbase = web3i.inb.coinbase;
+var balance = web3i.inb.getBalance(coinbase);
 ```
 
 You can find more examples in [`example`](https://github.com/ethereum/web3i.js/tree/master/example) directory.
@@ -120,30 +120,3 @@ npm run-script build
 ```bash
 npm test
 ```
-
-### Community
- - [Gitter](https://gitter.im/ethereum/web3i.js?source=orgpage)
- - [Forum](https://forum.ethereum.org/categories/ethereum-js)
-
-
-### Other implementations
- - Python [web3i.py](https://github.com/ethereum/web3i.py)
- - Haskell [hs-web3i](https://github.com/airalab/hs-web3i)
- - Java [web3ij](https://github.com/web3ij/web3ij)
- - Scala [web3ij-scala](https://github.com/mslinn/web3ij-scala)
- - Purescript [purescript-web3i](https://github.com/f-o-a-m/purescript-web3i)
- - PHP [web3i.php](https://github.com/sc0Vu/web3i.php)
-
-
-[npm-image]: https://badge.fury.io/js/web3i.svg
-[npm-url]: https://npmjs.org/package/web3i
-[travis-image]: https://travis-ci.org/ethereum/web3i.js.svg
-[travis-url]: https://travis-ci.org/ethereum/web3i.js
-[dep-image]: https://david-dm.org/ethereum/web3i.js.svg
-[dep-url]: https://david-dm.org/ethereum/web3i.js
-[dep-dev-image]: https://david-dm.org/ethereum/web3i.js/dev-status.svg
-[dep-dev-url]: https://david-dm.org/ethereum/web3i.js#info=devDependencies
-[coveralls-image]: https://coveralls.io/repos/ethereum/web3i.js/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/r/ethereum/web3i.js?branch=master
-[waffle-image]: https://badge.waffle.io/ethereum/web3i.js.svg?label=ready&title=Ready
-[waffle-url]: https://waffle.io/ethereum/web3i.js
